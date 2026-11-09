@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forja de Modpack — planejador para Fabric</title>
+<meta name="description" content="Planeje seu modpack de Minecraft (Fabric): defina o objetivo, pontue o pack e receba sugestões de mods.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%236e4520'/%3E%3Crect width='8' height='3' fill='%234f9d2d'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%237bc94a'/%3E%3Crect x='5' width='2' height='1' fill='%237bc94a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f7; --panel:#ffffff; --panel2:#f1f4fa; --line:#d2d9e8; --bevel:#c3ccdf;
+  --text:#1b2236; --muted:#586582; --lapis:#3556e0; --gold:#a96a0c; --copper:#0e7f6a;
+  --red:#cc3333; --amethyst:#6a49d4; --xp:#3c9a0f; --xp2:#79cf36; --seg:#cdd5e7; --shadow:#0000002e;
+  --head:'Pixelify Sans','Courier New',monospace;
+  --body:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121725; --panel:#1b2236; --panel2:#222b43; --line:#334060; --bevel:#10162a;
+    --text:#e7ebf6; --muted:#9aa6c4; --lapis:#8197ff; --gold:#f0b94a; --copper:#4fd2b8;
+    --red:#ff7070; --amethyst:#b6a0ff; --xp:#8cf03e; --xp2:#c4ff86; --seg:#2a3452; --shadow:#000000b0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121725; --panel:#1b2236; --panel2:#222b43; --line:#334060; --bevel:#10162a;
+  --text:#e7ebf6; --muted:#9aa6c4; --lapis:#8197ff; --gold:#f0b94a; --copper:#4fd2b8;
+  --red:#ff7070; --amethyst:#b6a0ff; --xp:#8cf03e; --xp2:#c4ff86; --seg:#2a3452; --shadow:#000000b0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 150px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 var(--body);min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--panel);z-index:30}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--lapis);outline-offset:2px}
+h1,h2,h3,h4{margin:0;font-weight:700;line-height:1.2}
+h2{font-family:var(--head);font-size:1.55rem;letter-spacing:.01em}
+h3{font-size:1.05rem}
+p{margin:.4em 0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+
+/* topo */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--panel);border-bottom:2px solid var(--line);box-shadow:0 3px 0 var(--shadow)}
+.top .wrap{display:grid;grid-template-columns:minmax(180px,1fr) minmax(260px,1.2fr) auto;gap:18px;align-items:center;padding-top:10px;padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{flex:none;image-rendering:pixelated}
+.brand small{display:block;color:var(--muted);font-size:.78rem}
+#packName{width:100%;min-width:0;background:transparent;border:0;border-bottom:2px dashed var(--line);font:700 1.15rem var(--head);padding:2px 0;color:var(--text)}
+.xp{text-align:center}
+.lvl{font:700 2rem/1 var(--head);color:var(--xp);text-shadow:2px 2px 0 var(--shadow);letter-spacing:.02em;min-height:2rem}
+.lvl small{font:600 .85rem var(--body);color:var(--muted);text-shadow:none;margin-left:6px}
+.xpbar{position:relative;height:14px;margin:6px auto 4px;background:var(--seg);border:2px solid var(--bevel);max-width:440px;overflow:hidden}
+.xpbar .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--xp),var(--xp2));transition:width .35s ease}
+.xpbar .segs{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(5% - 2px),var(--panel) calc(5% - 2px) 5%)}
+.verdict{font-size:.85rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.chip{border:1px solid var(--line);background:var(--panel2);padding:2px 9px;font-size:.8rem;border-radius:3px;white-space:nowrap}
+.chip.warn{border-color:var(--gold);color:var(--gold)}
+.chip.err{border-color:var(--red);color:var(--red)}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-top:1px solid var(--line)}
+.tabs .wrap{display:flex;gap:2px;padding-top:0;padding-bottom:0;display:flex}
+.tab{background:transparent;border:0;border-bottom:3px solid transparent;padding:10px 14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--lapis)}
+.tab .n{font-size:.75rem;background:var(--lapis);color:#fff;border-radius:9px;padding:0 6px;margin-left:5px}
+.theme{background:transparent;border:1px solid var(--line);border-radius:3px;padding:2px 8px;font-size:.8rem;color:var(--muted)}
+
+main{padding:22px 0 80px}
+.lead{color:var(--muted);max-width:68ch;margin:.2em 0 1.2em}
+.block{background:var(--panel);border:2px solid var(--line);border-radius:4px;box-shadow:0 3px 0 var(--bevel);padding:18px 20px;margin-bottom:20px}
+.block>h3{margin-bottom:4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{background:var(--lapis);color:#fff;border:0;border-radius:3px;padding:8px 14px;font-weight:600;box-shadow:0 3px 0 #0003}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0003}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:var(--panel2)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn.danger{background:transparent;color:var(--red);border:1px solid var(--red);box-shadow:none}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.pre{border:1px solid var(--line);background:var(--panel2);padding:5px 11px;border-radius:3px;font-weight:600;font-size:.9rem}
+.pre:hover{border-color:var(--lapis)}
+.pre.on{background:var(--lapis);border-color:var(--lapis);color:#fff}
+textarea,input[type=text],input[type=search],select{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:8px 10px;width:100%}
+textarea{min-height:76px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.slrow{display:grid;grid-template-columns:minmax(150px,230px) 1fr 66px;gap:12px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--line)}
+.slrow:last-child{border-bottom:0}
+.slrow label b{display:block;font-size:.95rem}
+.slrow label span{display:block;color:var(--muted);font-size:.78rem;line-height:1.3}
+.slrow output{font:700 1.05rem var(--head);text-align:right;color:var(--lapis)}
+input[type=range]{width:100%;accent-color:var(--lapis);height:28px}
+.insight{border-left:4px solid var(--copper);background:var(--panel2);padding:10px 14px;margin-top:14px;font-size:.92rem}
+.insight p{margin:.25em 0}
+
+/* catálogo */
+.filters{display:grid;grid-template-columns:1.4fr 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.togs{display:flex;flex-wrap:wrap;gap:14px;font-size:.88rem;color:var(--muted);margin-bottom:12px}
+.togs label{display:flex;gap:6px;align-items:center}
+.mrow{display:grid;grid-template-columns:minmax(210px,1.6fr) 96px 110px 200px 168px;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line)}
+.mrow:hover{background:var(--panel2)}
+.mrow.in{box-shadow:inset 4px 0 0 var(--xp)}
+.mrow.off{opacity:.55}
+.mname{font-weight:700}
+.mname small{font-weight:500;color:var(--muted);margin-left:6px}
+.mdesc{color:var(--muted);font-size:.86rem;line-height:1.35;margin-top:2px}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:.7rem;border:1px solid var(--line);padding:0 6px;border-radius:2px;color:var(--muted)}
+.tag.warn{border-color:var(--gold);color:var(--gold)}
+.tag.err{border-color:var(--red);color:var(--red)}
+.fit{font-size:.78rem;color:var(--muted)}
+.fit b{font:700 1.05rem var(--head);color:var(--text)}
+.meter{height:6px;background:var(--seg);margin-top:3px}
+.meter i{display:block;height:100%;background:var(--copper)}
+.cost{font-size:.8rem;color:var(--muted);line-height:1.5}
+.vts{display:flex;gap:3px;flex-wrap:wrap}
+.vt{font-style:normal;font-size:.68rem;padding:0 5px;border:1px solid var(--line);color:var(--muted);opacity:.45;border-radius:2px}
+.vt.on{opacity:1;color:var(--text);border-color:var(--copper)}
+.vt.cur{background:var(--copper);color:#fff;border-color:var(--copper)}
+.acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.vlink{font-size:.75rem;color:var(--lapis)}
+
+/* pack */
+.scoregrid{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+.radar{width:100%;height:auto}
+.radar .ring{fill:none;stroke:var(--line);stroke-width:1}
+.radar .axis{stroke:var(--line);stroke-width:1}
+.radar .area{fill:var(--lapis);fill-opacity:.25;stroke:var(--lapis);stroke-width:2}
+.radar text{fill:var(--muted);font:11px var(--body)}
+.crit{padding:9px 0;border-bottom:1px dotted var(--line)}
+.crit:last-child{border-bottom:0}
+.crit .h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.crit .h b{font-size:.98rem}
+.crit .h span{font:700 1.1rem var(--head)}
+.crit .h em{font-style:normal;color:var(--muted);font-size:.78rem;margin-left:6px}
+.bar{height:8px;background:var(--seg);margin:5px 0}
+.bar i{display:block;height:100%}
+.notes{margin:4px 0 0;padding-left:18px;color:var(--muted);font-size:.85rem}
+.notes li{margin:1px 0}
+.issue{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-left:4px solid var(--line);background:var(--panel2);margin-bottom:8px;font-size:.92rem}
+.issue.err{border-left-color:var(--red)}
+.issue.warn{border-left-color:var(--gold)}
+.issue.info{border-left-color:var(--lapis)}
+.issue .t{flex:1}
+.issue b{font-weight:700}
+.dimrow{display:grid;grid-template-columns:200px 1fr 60px;gap:12px;align-items:center;padding:5px 0;font-size:.88rem}
+.dtrack{position:relative;height:12px;background:var(--seg)}
+.dtrack i{position:absolute;inset:0 auto 0 0;display:block}
+.dtrack u{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--text);text-decoration:none}
+.legend{font-size:.8rem;color:var(--muted);margin-top:6px}
+.cgroup{margin:14px 0 4px;font-weight:700;color:var(--muted);font-size:.85rem}
+.prow{display:grid;grid-template-columns:1fr 70px 80px auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dotted var(--line);font-size:.92rem}
+.mono{font-variant-numeric:tabular-nums}
+
+/* tabelas */
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.8rem}
+tr.best td{background:var(--panel2)}
+tr.best td:first-child{box-shadow:inset 4px 0 0 var(--xp)}
+.scroll{overflow-x:auto}
+.sugrow{display:grid;grid-template-columns:1fr 90px auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px dotted var(--line)}
+.sugrow .why{color:var(--muted);font-size:.82rem}
+.gain{font:700 1.1rem var(--head);color:var(--copper);text-align:right}
+.gain.neg{color:var(--red)}
+.ai-out{background:var(--panel2);border:1px solid var(--line);padding:14px 18px;margin-top:12px;min-height:60px}
+.ai-out h4{margin:14px 0 4px;font-family:var(--head);font-size:1.1rem;color:var(--lapis)}
+.ai-out ul{padding-left:20px;margin:.3em 0}
+.ai-out p{margin:.4em 0}
+.exp{width:100%;min-height:220px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+details{margin-top:8px}
+summary{cursor:pointer;font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:3px;opacity:0;pointer-events:none;transition:all .25s;z-index:50;max-width:90vw;font-size:.9rem}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.lv-y{color:var(--copper);font-weight:700}
+.lv-n{color:var(--red)}
+.lv-q{color:var(--muted)}
+.foot{color:var(--muted);font-size:.8rem;margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+.empty{padding:24px;text-align:center;color:var(--muted);border:2px dashed var(--line)}
+
+@media (max-width:860px){
+  .top .wrap{grid-template-columns:1fr;gap:8px}
+  .chips{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .top .wrap{padding-top:6px;padding-bottom:6px}
+  .lvl{font-size:1.6rem;min-height:1.6rem}
+  .xpbar{margin:3px auto}
+  .brand svg{width:30px;height:30px}
+  .grid2,.scoregrid{grid-template-columns:1fr}
+  .slrow{grid-template-columns:1fr 60px;row-gap:2px}
+  .slrow label{grid-column:1 / -1}
+  .filters{grid-template-columns:1fr}
+  .mrow{grid-template-columns:1fr auto;row-gap:8px}
+  .mrow .c-main{grid-column:1 / -1}
+  .dimrow{grid-template-columns:1fr 50px}
+  .dimrow .dtrack{grid-column:1 / -1;order:3}
+  .prow{grid-template-columns:1fr auto}
+  .prow .hide-m{display:none}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">
+        <rect width="8" height="8" fill="#6e4520"/>
+        <rect width="8" height="3" fill="#4f9d2d"/>
+        <rect y="3" width="2" height="1" fill="#4f9d2d"/><rect x="5" y="3" width="2" height="1" fill="#4f9d2d"/>
+        <rect x="1" y="1" width="1" height="1" fill="#7bc94a"/><rect x="5" y="0" width="2" height="1" fill="#7bc94a"/>
+        <rect x="2" y="5" width="1" height="1" fill="#8b5a2b"/><rect x="5" y="6" width="2" height="1" fill="#8b5a2b"/>
+        <rect x="0" y="7" width="3" height="1" fill="#59381a"/><rect x="4" y="4" width="1" height="1" fill="#59381a"/>
+      </svg>
+      <div style="min-width:0;flex:1">
+        <small>Forja de Modpack · Fabric · jogo solo</small>
+        <input id="packName" type="text" maxlength="40" aria-label="Nome do pack" value="Meu modpack">
+      </div>
+    </div>
+    <div class="xp" id="xp" aria-live="polite"></div>
+    <div class="chips" id="stats"></div>
+  </div>
+  <nav class="tabs" aria-label="Seções"><div class="wrap" id="tabs" role="tablist"></div></nav>
+</header>
+
+<main><div class="wrap" id="view"></div></main>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var clamp=function(x,a,b){return Math.max(a,Math.min(b,x))};
+var norm=function(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()};
+var fmt=function(x,d){return Number(x).toLocaleString('pt-BR',{maximumFractionDigits:d==null?1:d,minimumFractionDigits:0})};
+var clone=function(o){return JSON.parse(JSON.stringify(o))};
+
+/* ============ DADOS ============ */
+var DIMS=[
+ {k:'ex',n:'Exploração e aventura',d:'Estruturas, dungeons, chefes, descobrir o mundo'},
+ {k:'te',n:'Tecnologia e automação',d:'Máquinas, energia, logística de itens'},
+ {k:'ma',n:'Magia e mistério',d:'Sistemas mágicos, rituais, mana'},
+ {k:'su',n:'Sobrevivência e desafio',d:'Sede, estações, risco, progressão dura'},
+ {k:'co',n:'Construção e decoração',d:'Blocos, mobília, ferramentas de construção'},
+ {k:'cb',n:'Combate e progressão RPG',d:'Armas, classes, magias de combate'},
+ {k:'vi',n:'Atmosfera visual e sonora',d:'Terreno, luz, sons, animações'},
+ {k:'cr',n:'Criaturas, fazenda e vida',d:'Mobs, domesticação, culinária, agricultura'},
+ {k:'qo',n:'Conveniência (QoL)',d:'Mapas, receitas, inventário, informação'}
+];
+var DK={};DIMS.forEach(function(d){DK[d.k]=d});
+var VERS=[
+ {t:'A',id:'1.20.1',vq:'1.20.1',java:17,risk:1,idx:0,note:'Ecossistema de conteúdo mais vasto (Create, Cobblemon, RPG Series); mods quase só recebem correções.'},
+ {t:'B',id:'1.21.1',vq:'1.21.1',java:21,risk:0,idx:1,note:'Equilíbrio: conteúdo maduro e muitos mods ainda ativos.'},
+ {t:'C',id:'1.21.11',vq:'1.21.11',java:21,risk:2,idx:2,note:'Última da linha 1.x (ofuscada); recursos novos sem trocar de Java.'},
+ {t:'D',id:'26.1.x',vq:'26.1.2',java:25,risk:4,idx:3,note:'Primeira versão sem ofuscação; exige Java 25 e mods recompilados (nenhum de 1.21.11 ou anterior funciona).'},
+ {t:'E',id:'26.2',vq:'26.2',java:25,risk:6,idx:4,note:'Mais nova que o catálogo cobre; otimização já atualizada, conteúdo pesado ainda chegando. Pode haver versões ainda mais novas.'}
+];
+var VT={};VERS.forEach(function(v){VT[v.t]=v});
+var CATS=['Otimização','Bibliotecas','Interface & QoL','Mapas & Navegação','Visual & Som','Mundo & Estruturas','Aventura & Combate','Tecnologia','Magia','Sobrevivência','Comida & Fazenda','Criaturas','Construção'];
+var INFRA={'Otimização':1,'Bibliotecas':1};
+var GR={recipes:'visualizador de receitas',minimap:'minimapa',tooltip:'informação ao mirar blocos',farview:'distância de renderização estendida'};
+var PRESETS=[
+ {id:'vanilla',n:'Vanilla+ polido',w:{ex:3,te:0,ma:0,su:2,co:3,cb:1,vi:6,cr:1,qo:8},vanilla:9,fps:8,size:40,d:'Quase vanilla, só mais bonito e confortável.'},
+ {id:'aventura',n:'Aventura e exploração',w:{ex:9,te:0,ma:2,su:4,co:2,cb:6,vi:6,cr:3,qo:5},vanilla:5,fps:6,size:70,d:'Mundo novo, estruturas grandes, chefes.'},
+ {id:'tech',n:'Tecnologia e automação',w:{ex:3,te:9,ma:1,su:4,co:6,cb:1,vi:3,cr:2,qo:6},vanilla:3,fps:6,size:55,d:'Fábricas, energia e logística.'},
+ {id:'magia',n:'Magia e mistério',w:{ex:6,te:2,ma:9,su:4,co:3,cb:4,vi:5,cr:2,qo:4},vanilla:3,fps:6,size:55,d:'Progressão mágica longa.'},
+ {id:'surv',n:'Sobrevivência intensa',w:{ex:5,te:1,ma:0,su:9,co:3,cb:4,vi:6,cr:4,qo:3},vanilla:6,fps:7,size:60,d:'Clima, sede, estações, mundo hostil.'},
+ {id:'cria',n:'Criaturas (Cobblemon)',w:{ex:6,te:0,ma:0,su:1,co:3,cb:3,vi:5,cr:9,qo:6},vanilla:5,fps:6,size:50,d:'Capturar e treinar criaturas.'},
+ {id:'build',n:'Construtor',w:{ex:2,te:3,ma:0,su:1,co:9,cb:0,vi:7,cr:2,qo:7},vanilla:6,fps:7,size:50,d:'Paleta enorme e ferramentas de obra.'}
+];
+
+var MODS=[],BY={};
+function M(id,name,cat,desc,aff,ram,cpu,inv,ver,o){
+  o=o||{};var a={};
+  (aff||'').split(' ').filter(Boolean).forEach(function(s){a[s.slice(0,2)]=+s.slice(2)});
+  var m={id:id,name:name,cat:cat,desc:desc,a:a,ram:ram,cpu:cpu,inv:inv,ver:ver,
+    dep:o.dep||(o.nofapi?[]:['fabric-api']),grp:o.grp||null,core:!!o.core,fragile:!!o.fragile,
+    lib:!!o.lib,gpu:!!o.gpu,heavy:!!o.heavy,note:o.note||'',con:o.con||[]};
+  MODS.push(m);BY[id]=m;
+}
+/* Otimização */
+M('sodium','Sodium','Otimização','Reescreve o renderizador de chunks: muito mais FPS e menos engasgos.','',-40,-5,0,'ABCDE',{core:1,nofapi:1});
+M('lithium','Lithium','Otimização','Otimiza IA, física e ticks sem alterar o comportamento do jogo.','',-20,-3,0,'ABCDE',{core:1,nofapi:1});
+M('ferritecore','FerriteCore','Otimização','Corta o uso de RAM de blocos e modelos; essencial com 4 GB.','',-160,0,0,'ABCD',{core:1,nofapi:1});
+M('modernfix','ModernFix','Otimização','Acelera o carregamento e reduz RAM; corrige gargalos conhecidos.','',-120,-1,0,'ABCD',{core:1,nofapi:1});
+M('entityculling','Entity Culling','Otimização','Não renderiza entidades e blocos animados fora do campo de visão.','',0,-2,0,'ABCDE',{core:1,nofapi:1});
+M('immediatelyfast','ImmediatelyFast','Otimização','Acelera HUD, texto e renderização imediata.','',0,-1.5,0,'ABCDE',{core:1,nofapi:1});
+M('c2me','C2ME','Otimização','Gera e carrega chunks em várias threads; menos travadas ao explorar.','',40,-2,0,'ABCDE',{nofapi:1,fragile:1,note:'Experimental; pode atrapalhar mods de geração de mundo.'});
+M('memoryleakfix','Memory Leak Fix','Otimização','Corrige vazamentos de memória do jogo base.','',-40,0,0,'ABCD',{nofapi:1});
+M('dynamicfps','Dynamic FPS','Otimização','Reduz FPS e carga quando a janela está sem foco.','',0,-0.5,0,'ABCDE',{nofapi:1});
+M('spark','spark','Otimização','Profiler de TPS, CPU e memória para achar o mod culpado.','qo1',10,0,0,'ABCDE',{nofapi:1});
+M('sodiumextra','Sodium Extra','Otimização','Opções extras no menu do Sodium: animações, partículas, FPS.','',5,0,0,'ABCDE',{dep:['sodium']});
+M('rso','Reese’s Sodium Options','Otimização','Menu de vídeo do Sodium reorganizado em abas.','',5,0,0,'ABCDE',{dep:['sodium']});
+M('debugify','Debugify','Otimização','Corrige bugs do vanilla reportados no Mojira.','',5,0,1,'ABC',{nofapi:1});
+/* Bibliotecas */
+M('fabric-api','Fabric API','Bibliotecas','Base exigida pela maioria dos mods Fabric.','',25,0,0,'ABCDE',{core:1,nofapi:1,lib:1});
+M('yacl','YetAnotherConfigLib','Bibliotecas','Biblioteca de telas de configuração.','',8,0,0,'ABCDE',{lib:1});
+M('cloth-config','Cloth Config API','Bibliotecas','Biblioteca de configuração usada por vários mods.','',6,0,0,'ABCD',{lib:1});
+M('architectury','Architectury API','Bibliotecas','Camada multiplataforma usada por muitos mods.','',15,0,0,'ABCD',{lib:1});
+M('geckolib','GeckoLib','Bibliotecas','Animação de modelos para mobs e itens.','',20,0,0,'ABCDE',{lib:1});
+M('yung-api','YUNG’s API','Bibliotecas','Base das estruturas “Better” do YUNG.','',10,0,0,'ABC',{lib:1});
+M('lithostitched','Lithostitched','Bibliotecas','Base de geração de mundo para Tectonic e outros.','',10,0,0,'BCD',{lib:1});
+M('patchouli','Patchouli','Bibliotecas','Livros-guia dentro do jogo (Botania, Hex Casting etc.).','',12,0,0,'ABCD',{lib:1});
+M('playeranimator','PlayerAnimator','Bibliotecas','Animações de jogador para combate e emotes.','',10,0,0,'ABCD',{lib:1});
+M('malilib','MaLiLib','Bibliotecas','Base do Litematica e ferramentas relacionadas.','',12,0,0,'ABCD',{lib:1,nofapi:1});
+M('moonlight','Moonlight Lib','Bibliotecas','Base do Supplementaries.','',20,0,0,'ABC',{lib:1});
+M('balm','Balm','Bibliotecas','Base do Waystones e de outros mods da BlayTheNinth.','',8,0,0,'ABC',{lib:1});
+M('spellengine','Spell Engine','Bibliotecas','Sistema de magias da série RPG (Wizards, Paladins & Priests).','',60,1,2,'AB',{lib:1,dep:['fabric-api','playeranimator']});
+/* Interface & QoL */
+M('modmenu','Mod Menu','Interface & QoL','Lista de mods e acesso às configurações.','qo1',8,0,0,'ABCDE',{core:1});
+M('emi','EMI','Interface & QoL','Receitas e inventário de itens, moderno e rápido.','qo3',100,1,0,'ABCDE',{grp:'recipes'});
+M('jei','Just Enough Items','Interface & QoL','Receitas e lista de itens, o clássico.','qo3',90,1,0,'ABCD',{grp:'recipes'});
+M('rei','Roughly Enough Items','Interface & QoL','Receitas e itens com visual limpo.','qo3',85,1,0,'ABC',{grp:'recipes',dep:['fabric-api','cloth-config','architectury']});
+M('jade','Jade','Interface & QoL','Mostra informações do bloco ou entidade que você mira.','qo2',15,0,0,'ABCDE',{grp:'tooltip'});
+M('wthit','WTHIT','Interface & QoL','Alternativa ao Jade para informação ao mirar.','qo2',15,0,0,'ABCD',{grp:'tooltip'});
+M('appleskin','AppleSkin','Interface & QoL','Mostra saturação e fome restauradas por cada comida.','qo1 su1',3,0,0,'ABCDE');
+M('ipn','Inventory Profiles Next','Interface & QoL','Ordenação e movimentação rápida de inventário.','qo3',20,0.5,1,'ABC');
+M('mousetweaks','Mouse Tweaks','Interface & QoL','Arrastar e espalhar itens com o mouse.','qo2',2,0,0,'ABCD');
+M('controlify','Controlify','Interface & QoL','Suporte a controle com interface adaptada.','qo1',25,0.5,0,'BCDE',{dep:['fabric-api','yacl']});
+M('zoomify','Zoomify','Interface & QoL','Zoom configurável.','qo1',5,0,0,'ABCD',{dep:['fabric-api','yacl']});
+M('nochatreports','No Chat Reports','Interface & QoL','Remove a assinatura criptográfica do chat.','qo1',3,0,0,'ABCD');
+M('shulkertooltip','Shulker Box Tooltip','Interface & QoL','Vê o conteúdo de shulkers sem abrir.','qo1',5,0,0,'ABCD');
+M('paginatedadv','Paginated Advancements','Interface & QoL','Tela de conquistas paginada e fluida.','qo1 ex1',3,0,0,'ABCD');
+M('enchdesc','Enchantment Descriptions','Interface & QoL','Descrições de encantamentos nos itens.','qo1',6,0,0,'ABCD');
+/* Mapas & Navegação */
+M('xaerominimap','Xaero’s Minimap','Mapas & Navegação','Minimapa leve com waypoints e radar.','qo2 ex1',40,1,0,'ABCDE',{grp:'minimap'});
+M('xaeroworldmap','Xaero’s World Map','Mapas & Navegação','Mapa do mundo explorado em tela cheia.','qo2 ex2',100,1,0,'ABCDE');
+M('journeymap','JourneyMap','Mapas & Navegação','Minimapa e mapa completo com waypoints e marcadores.','qo2 ex1',160,1.5,0,'ABCDE',{grp:'minimap'});
+M('naturescompass','Nature’s Compass','Mapas & Navegação','Bússola que localiza biomas.','ex2 qo1',5,0,1,'ABC');
+M('explorerscompass','Explorer’s Compass','Mapas & Navegação','Bússola que localiza estruturas.','ex2 qo1',5,0,1,'ABC');
+M('waystones','Waystones','Mapas & Navegação','Rede de teleporte com pedras de viagem.','qo2 ex1',15,0.3,2,'ABC',{dep:['fabric-api','balm']});
+/* Visual & Som */
+M('iris','Iris Shaders','Visual & Som','Suporte a shaders compatível com o Sodium.','vi2',80,1,1,'ABCDE',{dep:['sodium','fabric-api'],note:'Exige Sodium na versão compatível.'});
+M('shaders','Pacote de shaders (ex.: Complementary)','Visual & Som','Iluminação, sombras e água avançadas; pesa na GPU, pouco na RAM.','vi3',150,9,2,'ABCDE',{dep:['iris'],gpu:1});
+M('distanthorizons','Distant Horizons','Visual & Som','Renderiza o mundo muito além da distância de chunks usando LODs.','vi2 ex1',600,7,1,'ABCDE',{heavy:1,nofapi:1,grp:'farview',note:'Pesa em 4 GB; limite threads e qualidade de LOD.'});
+M('bobby','Bobby','Visual & Som','Guarda chunks vistos para estender a distância visual no cliente.','vi1',80,1,0,'ABCD',{grp:'farview'});
+M('continuity','Continuity','Visual & Som','Texturas conectadas (CTM) para resource packs.','vi2',40,0.5,0,'ABCD');
+M('lambdynlights','LambDynamicLights','Visual & Som','Luz dinâmica ao segurar tochas e itens brilhantes.','vi2',5,1.5,0,'ABCD');
+M('nea','Not Enough Animations','Visual & Som','Animações de primeira e terceira pessoa mais fluidas.','vi2',15,1,1,'ABCD');
+M('fallingleaves','Falling Leaves','Visual & Som','Folhas caindo das árvores.','vi2',5,1,0,'ABCD');
+M('presencefootsteps','Presence Footsteps','Visual & Som','Passos realistas por tipo de superfície.','vi2',20,0.5,0,'ABCD');
+M('soundphysics','Sound Physics Remastered','Visual & Som','Reverberação e abafamento de som conforme o ambiente.','vi2',15,1.5,0,'ABCD');
+M('visuality','Visuality','Visual & Som','Partículas sutis ao interagir com o mundo.','vi2',8,1,0,'BC');
+M('betterthirdperson','Better Third Person','Visual & Som','Câmera de terceira pessoa estilo ação.','vi1 cb1',8,0.3,1,'ABC');
+M('skinlayers','Skin Layers 3D','Visual & Som','Camadas de skin em 3D.','vi1',10,0.5,0,'ABCD');
+M('immersiveweathering','Immersive Weathering','Visual & Som','Envelhecimento de blocos: musgo, ferrugem, gelo.','vi2 su1',50,1,2,'ABC');
+/* Mundo & Estruturas */
+M('terralith','Terralith','Mundo & Estruturas','Mais de 100 biomas e terreno espetacular mantendo o clima vanilla.','ex2 vi3',60,2,2,'ABCD',{con:['wwoo']});
+M('tectonic','Tectonic','Mundo & Estruturas','Relevo dramático: montanhas altas, oceanos fundos, rios.','ex2 vi3',40,2.5,2,'ABCD',{dep:['fabric-api','lithostitched'],con:['wwoo']});
+M('wwoo','William Wythers’ Overhauled Overworld','Mundo & Estruturas','Reformula biomas e geração do Overworld.','ex2 vi3',40,2,3,'AB',{con:['terralith','tectonic']});
+M('naturesspirit','Nature’s Spirit','Mundo & Estruturas','Biomas, árvores e criaturas novas no estilo vanilla.','ex2 vi2 cr1',80,1.5,2,'ABC');
+M('betterend','BetterEnd','Mundo & Estruturas','Refaz o End: biomas, estruturas e progressão.','ex3 vi2',150,3,3,'ABC');
+M('betternether','BetterNether','Mundo & Estruturas','Refaz o Nether: biomas, itens e plantas novas.','ex3 vi2',120,3,3,'ABC');
+M('repurposed','Repurposed Structures','Mundo & Estruturas','Variantes de estruturas vanilla por bioma.','ex2 vi1',50,1,1,'ABCD');
+M('bdungeons','YUNG’s Better Dungeons','Mundo & Estruturas','Dungeons maiores, variadas e com chefes.','ex2 cb1',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
+M('bmineshafts','YUNG’s Better Mineshafts','Mundo & Estruturas','Minas abandonadas redesenhadas.','ex2',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
+M('bstrongholds','YUNG’s Better Strongholds','Mundo & Estruturas','Fortalezas subterrâneas redesenhadas.','ex2',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
+M('bdeserttemples','YUNG’s Better Desert Temples','Mundo & Estruturas','Templos do deserto com armadilhas e salas novas.','ex2',10,0.3,1,'ABC',{dep:['fabric-api','yung-api']});
+M('boceanmonuments','YUNG’s Better Ocean Monuments','Mundo & Estruturas','Monumentos oceânicos maiores e mais variados.','ex2',10,0.3,1,'ABC',{dep:['fabric-api','yung-api']});
+M('whendungeonsarise','When Dungeons Arise','Mundo & Estruturas','Estruturas gigantes: castelos, fortalezas e navios.','ex3 cb1',70,1,2,'ABC');
+M('dungeonstaverns','Dungeons and Taverns','Mundo & Estruturas','Dezenas de estruturas pequenas e médias, estilo vanilla.','ex2',20,0.5,1,'ABCD');
+M('ctov','ChoiceTheorem’s Overhauled Village','Mundo & Estruturas','Vilas variadas por bioma.','ex2 co1',30,1,1,'ABC');
+/* Aventura & Combate */
+M('bettercombat','Better Combat','Aventura & Combate','Golpes com animação, alcance e arco de ataque por arma.','cb3',30,1,2,'ABCD',{dep:['fabric-api','playeranimator','cloth-config']});
+M('wizards','Wizards (RPG Series)','Aventura & Combate','Classe de mago: cajados, magias e armaduras.','ma2 cb2',80,1,3,'AB',{dep:['fabric-api','spellengine']});
+M('paladins','Paladins & Priests (RPG Series)','Aventura & Combate','Classes de paladino e sacerdote com magias de apoio.','cb2 ma1',80,1,3,'AB',{dep:['fabric-api','spellengine']});
+M('archers','Archers (RPG Series)','Aventura & Combate','Arqueiros: arcos com habilidades e armaduras.','cb2',60,1,2,'AB');
+M('bomd','Bosses of Mass Destruction','Aventura & Combate','Chefes com mecânicas elaboradas e estruturas próprias.','ex3 cb3',90,1.5,2,'A');
+M('friendsfoes','Friends & Foes','Aventura & Combate','Mobs novos no espírito dos votados no Minecraft Live.','cr1 ex1',35,0.5,1,'ABC');
+M('mythicmetals','Mythic Metals','Aventura & Combate','Dezenas de metais, ferramentas e armaduras novas.','cb2 ex1',30,0.3,2,'AB');
+/* Tecnologia */
+M('create','Create','Tecnologia','Máquinas mecânicas animadas, correias, trens e automação criativa.','te3 co2 su1',280,3.5,3,'A',{note:'Versão Fabric (Fabricators of Create).'});
+M('createrails','Create: Steam ’n’ Rails','Tecnologia','Trens a vapor, trilhos e sinalização para o Create.','te2 ex1',60,1,2,'A',{dep:['fabric-api','create']});
+M('techreborn','Tech Reborn','Tecnologia','Indústria clássica: geradores, máquinas e energia.','te3',120,2,3,'ABC');
+M('modernindustrialization','Modern Industrialization','Tecnologia','Indústria modular com multiblocos e progressão longa.','te3 su1',200,3,3,'ABCD');
+M('ae2','Applied Energistics 2','Tecnologia','Armazenamento digital em rede e logística de itens.','te3 qo2',160,3,3,'A',{note:'Na linha Fabric só existe build para 1.20.1; da 1.21 em diante é NeoForge.'});
+M('adastra','Ad Astra','Tecnologia','Foguetes, planetas e exploração espacial.','te2 ex3',150,2,3,'AB',{dep:['fabric-api','architectury','geckolib']});
+M('tomssimple','Tom’s Simple Storage','Tecnologia','Armazenamento em rede simples e visual.','te2 qo2',40,0.5,2,'AB');
+M('immersiveaircraft','Immersive Aircraft','Tecnologia','Aviões, helicópteros e dirigíveis pilotáveis.','te1 ex2',70,1.5,2,'ABCD');
+/* Magia */
+M('botania','Botania','Magia','Magia botânica: flores geradoras, mana e automação natural.','ma3 te1 su1',180,2,3,'ABC',{dep:['fabric-api','patchouli']});
+M('hexcasting','Hex Casting','Magia','Magia programável com padrões de glifos.','ma3 te1',60,1,3,'AB',{dep:['fabric-api','patchouli']});
+M('spectrum','Spectrum','Magia','Magia de cristais, progressão longa e mundo próprio.','ma3 ex2',160,2,3,'AB',{dep:['fabric-api','patchouli']});
+/* Sobrevivência */
+M('dehydration','Dehydration','Sobrevivência','Sistema de sede com água limpa, suja e purificação.','su2',10,0.3,2,'ABC');
+M('fabricseasons','Fabric Seasons','Sobrevivência','Estações do ano afetam clima, plantas e temperatura.','su2 vi2',25,1,2,'ABC');
+M('universalgraves','Universal Graves','Sobrevivência','Túmulo com seus itens ao morrer.','su1 qo1',8,0,1,'ABCD');
+/* Comida & Fazenda */
+M('farmersdelight','Farmer’s Delight (Refabricated)','Comida & Fazenda','Agricultura e culinária expandidas, com estética vanilla-friendly.','cr2 su1',40,0.5,2,'ABCD');
+M('croptopia','Croptopia','Comida & Fazenda','Dezenas de culturas, árvores frutíferas e receitas.','cr2 su1',55,0.5,2,'ABCD');
+/* Criaturas */
+M('cobblemon','Cobblemon','Criaturas','Capture, treine e batalhe com Pokémon no Minecraft.','cr3 ex2 cb2',420,4,3,'ABC',{heavy:1,dep:['fabric-api','architectury'],note:'Pesado em 4 GB; use distância de renderização baixa.'});
+M('naturalist','Naturalist','Criaturas','Fauna nova e interativa: ursos, veados, borboletas.','cr2 ex1',40,0.5,1,'ABC',{dep:['fabric-api','geckolib']});
+M('species','Species','Criaturas','Criaturas, estruturas e itens novos com identidade própria.','cr2 ex1',45,0.5,2,'AB',{dep:['fabric-api','geckolib']});
+/* Construção */
+M('chipped','Chipped','Construção','Milhares de variações de blocos decorativos.','co3 vi1',40,0.3,1,'ABC');
+M('handcrafted','Handcrafted','Construção','Mobília e decoração com visual vanilla.','co3',50,0.3,1,'ABC',{dep:['fabric-api','architectury']});
+M('supplementaries','Supplementaries','Construção','Dezenas de blocos e itens utilitários e decorativos.','co3 qo2',70,0.5,2,'ABC',{dep:['fabric-api','moonlight']});
+M('worldedit','WorldEdit','Construção','Edição de grandes áreas por comando.','co3 qo1',25,0,1,'ABCD');
+M('litematica','Litematica','Construção','Projeções de construção em tela, com lista de materiais.','co3 qo2',40,0.5,1,'ABCD',{dep:['fabric-api','malilib']});
+
+/* ============ ESTADO ============ */
+var KEY='forja-modpack-v1';
+var DEF={name:'Meu modpack',w:{ex:6,te:3,ma:2,su:4,co:4,cb:4,vi:6,cr:3,qo:6},vanilla:6,fps:7,nov:5,size:60,heap:4,ver:'auto',pack:[],ban:[],preset:'',useLive:true};
+function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var S=(function(){var l=load(),d=clone(DEF);if(l&&typeof l==='object'){for(var k in l){if(k==='w'){for(var x in l.w){d.w[x]=l.w[x]}}else d[k]=l[k]}}
+  d.pack=(d.pack||[]).filter(function(i){return BY[i]});d.ban=(d.ban||[]).filter(function(i){return BY[i]});return d})();
+var ui={tab:'goal',q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
+var cur=null,DL=null;
+
+/* ============ MOTOR DE PONTUAÇÃO ============ */
+function modFit(m){
+  var ks=Object.keys(m.a);if(!ks.length)return null;
+  var tot=0,s=0,mx=0;
+  ks.forEach(function(k){tot+=m.a[k];s+=(S.w[k]/10)*m.a[k];mx=Math.max(mx,m.a[k])});
+  var f=s/tot;
+  f*=0.8+0.067*mx;
+  f-=(S.vanilla/10)*(m.inv/3)*0.25;
+  return clamp(f,0,1);
+}
+function critWeights(){
+  var pf=0.12+0.02*S.fps;
+  var sc=(1-pf)/0.80;
+  return {al:0.34*sc,fo:0.14*sc,pf:pf,es:0.16*sc,sc:0.10*sc,fu:0.06*sc};
+}
+function score(ids,t,lite){
+  var set={},mods=[];
+  ids.forEach(function(i){var m=BY[i];if(m&&!set[i]){set[i]=1;mods.push(m)}});
+  var n=mods.length,V=VT[t],H=S.heap*1024;
+  var used={};mods.forEach(function(m){m.dep.forEach(function(d){used[d]=1})});
+  var orph=mods.filter(function(m){return m.lib&&m.id!=='fabric-api'&&!used[m.id]});
+  var r={n:n,t:t,v:V,issues:[],crit:{al:0,fo:0,pf:0,es:0,sc:0,fu:0},notes:{al:[],fo:[],pf:[],es:[],sc:[],fu:[]},Pd:{},total:0,ram:1300,load:0,heap:H,ratio:1300/H,empty:n===0};
+  DIMS.forEach(function(d){r.Pd[d.k]=0});
+  if(!n){if(!lite)r.notes.al.push('Pack vazio.');return r}
+  mods.forEach(function(m){if(orph.indexOf(m)>=0)return;for(var k in m.a)r.Pd[k]+=m.a[k]});
+  var W=S.w,wsum=0;DIMS.forEach(function(d){wsum+=W[d.k]});wsum=wsum||1;
+  var SAT=clamp(S.size/9,4,20);r.SAT=SAT;
+  /* Alinhamento */
+  var cov=0,dot=0,np=0,nw=0;
+  DIMS.forEach(function(d){var k=d.k,T=(W[k]/10)*SAT;cov+=W[k]*(T>0?Math.min(1,r.Pd[k]/T):1);dot+=r.Pd[k]*W[k];np+=r.Pd[k]*r.Pd[k];nw+=W[k]*W[k]});
+  cov/=wsum;var cs=(np&&nw)?dot/(Math.sqrt(np)*Math.sqrt(nw)):0;
+  var content=mods.filter(function(m){return !INFRA[m.cat]&&!m.lib});
+  var invAvg=content.length?content.reduce(function(s,m){return s+m.inv},0)/content.length:0;
+  var tgt=0.4+(1-S.vanilla/10)*1.6;
+  var van=1-Math.min(1,Math.abs(invAvg-tgt)/1.3);
+  r.crit.al=100*(0.45*cov+0.30*cs+0.25*van);
+  r.cov=cov;r.invAvg=invAvg;r.invTgt=tgt;
+  if(!lite)r.notes.al.push('Cobertura do que você pediu: '+Math.round(cov*100)+'%.');
+  var lacks=DIMS.filter(function(d){return W[d.k]>=6&&r.Pd[d.k]<(W[d.k]/10)*SAT*0.5}).map(function(d){return d.n});
+  if(!lite&&lacks.length)r.notes.al.push('Pouco conteúdo em: '+lacks.join(', ')+'.');
+  var diff=invAvg-tgt;
+  if(!lite&&content.length&&Math.abs(diff)>0.6)r.notes.al.push(diff>0?'O pack altera o vanilla mais do que você quer (mods de conteúdo muito invasivos).':'O pack é mais “vanilla” do que você pediu; há espaço para mods mais transformadores.');
+  /* Foco */
+  var S2=DIMS.filter(function(d){return W[d.k]>=5}).map(function(d){return d.k});
+  if(!S2.length){S2=DIMS.slice().sort(function(a,b){return W[b.k]-W[a.k]}).slice(0,2).map(function(d){return d.k})}
+  var mt=0,mi=0;DIMS.forEach(function(d){mt+=r.Pd[d.k];if(S2.indexOf(d.k)>=0)mi+=r.Pd[d.k]});
+  var ratio=mt?mi/mt:0,s1=clamp((ratio-0.4)/0.4,0,1);
+  var offs=content.filter(function(m){var f=modFit(m);return f!==null&&f<0.2});
+  var offR=content.length?offs.length/content.length:0,s2=1-clamp(offR*1.6,0,1);
+  var disp=DIMS.filter(function(d){return r.Pd[d.k]>=6&&W[d.k]<=3});
+  var s3=1-clamp(disp.length*0.25,0,1);
+  r.crit.fo=100*(0.45*s1+0.35*s2+0.20*s3);
+  r.focusRatio=ratio;
+  if(!lite)r.notes.fo.push(Math.round(ratio*100)+'% do conteúdo cai nas áreas que você priorizou (meta: acima de 75%).');
+  if(!lite&&offs.length)r.notes.fo.push(offs.length+' mod(s) fora do objetivo: '+offs.slice(0,4).map(function(m){return m.name}).join(', ')+(offs.length>4?'…':'')+'.');
+  if(!lite&&disp.length)r.notes.fo.push('Dispersão: conteúdo relevante em áreas que você não quer (' +disp.map(function(d){return d.n}).join(', ')+').');
+  r.offs=offs;
+  /* Desempenho */
+  var ram=1300,load=0;mods.forEach(function(m){ram+=m.ram;load+=m.cpu});
+  r.ram=ram;r.load=load;r.ratio=ram/H;
+  var rs=clamp((1-r.ratio)/0.45,0,1),cs2=clamp((40-load)/32,0,1);
+  r.crit.pf=100*(0.6*rs+0.4*cs2);
+  if(!lite)r.notes.pf.push('RAM estimada: ~'+fmt(ram,0)+' MB de '+fmt(H,0)+' MB ('+Math.round(r.ratio*100)+'%). Confortável até ~55%; acima de 85% há risco de travadas e crash.');
+  if(!lite)r.notes.pf.push('Carga de CPU estimada: '+fmt(load,1)+' pts (menor é melhor; acima de ~25 pesa).');
+  var gp=mods.filter(function(m){return m.gpu});
+  if(!lite&&gp.length)r.notes.pf.push('Shaders pesam principalmente na GPU: confirme o FPS com a sua placa.');
+  var hv=mods.filter(function(m){return m.heavy});
+  if(!lite&&hv.length&&H<=4096)r.notes.pf.push('Mods pesados com pouca RAM: '+hv.map(function(m){return m.name}).join(', ')+'.');
+  /* Estabilidade */
+  var est=100,missing={},unavail=[],conf=[],groups={},frag=[];
+  mods.forEach(function(m){
+    m.dep.forEach(function(d){if(!set[d]){(missing[d]=missing[d]||[]).push(m)}});
+    if(m.ver.indexOf(t)<0)unavail.push(m);
+    m.con.forEach(function(c){if(set[c]&&m.id<c)conf.push([m,BY[c]])});
+    if(m.grp)(groups[m.grp]=groups[m.grp]||[]).push(m);
+    if(m.fragile)frag.push(m);
+  });
+  var md=Object.keys(missing);
+  est-=30*conf.length;est-=12*md.length;est-=10*unavail.length;
+  var gk=Object.keys(groups).filter(function(g){return groups[g].length>1});
+  gk.forEach(function(g){est-=10*(groups[g].length-1)});
+  est-=Math.min(12,3*frag.length);est-=4*orph.length;
+  r.crit.es=clamp(est,0,100);
+  if(!lite)conf.forEach(function(c){r.issues.push({sev:'err',text:'<b>'+esc(c[0].name)+'</b> conflita com <b>'+esc(c[1].name)+'</b> (os dois reescrevem a mesma parte do jogo).',fix:{act:'rm',id:c[1].id,label:'Remover '+c[1].name}})});
+  if(!lite)md.forEach(function(d){var dm=BY[d];r.issues.push({sev:'err',text:'<b>'+esc(missing[d].map(function(m){return m.name}).slice(0,3).join(', '))+(missing[d].length>3?'…':'')+'</b> precisa(m) de <b>'+esc(dm?dm.name:d)+'</b>.',fix:{act:'add',id:d,label:'Adicionar'}})});
+  if(!lite)unavail.forEach(function(m){r.issues.push({sev:'warn',text:'<b>'+esc(m.name)+'</b> não tem build conhecida para '+V.id+'.',fix:{act:'rm',id:m.id,label:'Remover'}})});
+  if(!lite)gk.forEach(function(g){r.issues.push({sev:'warn',text:'Redundância ('+GR[g]+'): '+groups[g].map(function(m){return '<b>'+esc(m.name)+'</b>'}).join(' + ')+'. Mantenha só um.'})});
+  if(!lite)frag.forEach(function(m){r.issues.push({sev:'info',text:'<b>'+esc(m.name)+'</b>: '+esc(m.note||'experimental')})});
+  /* libs órfãs */
+  if(!lite)orph.forEach(function(m){r.issues.push({sev:'info',text:'<b>'+esc(m.name)+'</b> não é usada por nenhum mod do pack.',fix:{act:'rm',id:m.id,label:'Remover'}})});
+  if(!lite){if(r.ratio>1)r.issues.unshift({sev:'err',text:'RAM estimada acima do heap: o jogo deve travar ou falhar ao carregar.'});}
+  else if(r.ratio>0.85)r.issues.unshift({sev:'warn',text:'RAM estimada acima de 85% do heap: sem folga para exploração e chunks.'});
+  if(!lite)r.notes.es.push(conf.length+' conflito(s) direto(s), '+md.length+' dependência(s) faltando, '+gk.length+' redundância(s), '+unavail.length+' mod(s) sem build conhecida em '+V.id+'.');
+  r.conf=conf.length;r.miss=md.length;r.unav=unavail.length;
+  /* Escopo */
+  var N=S.size,ne=Math.max(1,n-orph.length),sz=1-clamp(Math.abs(Math.log(ne/N))/Math.log(4),0,1);
+  var oh=content.filter(function(m){return m.inv>=3}).length,allowed=(S.vanilla<=4?3:2)+(N>100?1:0);
+  var s4=1-clamp(0.15*Math.max(0,oh-allowed),0,0.6);
+  r.crit.sc=100*(0.65*sz+0.35*s4);
+  if(!lite)r.notes.sc.push(n+' mods no pack (meta: '+N+'). '+(n<N*0.7?'Ainda abaixo da meta.':n>N*1.4?'Acima da meta: considere cortar.':'Dentro da faixa.'));
+  if(!lite)r.notes.sc.push(oh+' mod(s) de conteúdo muito transformador(es) (tolerância para o seu perfil: '+allowed+'). Muitos overhauls juntos disputam o mesmo espaço de jogo.');
+  r.oh=oh;
+  /* Fundamentos */
+  var cw=0,cp=0,cmiss=[];
+  MODS.forEach(function(m){if(m.core&&m.ver.indexOf(t)>=0){var w=(H<=4096&&(m.id==='ferritecore'||m.id==='modernfix'))?2:1;cw+=w;if(set[m.id])cp+=w;else cmiss.push(m.name)}});
+  r.crit.fu=cw?100*cp/cw:100;
+  if(!lite)r.notes.fu.push(cmiss.length?'Faltam fundamentos recomendados: '+cmiss.join(', ')+'.':'Todos os fundamentos recomendados para '+V.id+' estão presentes.');
+  /* Total */
+  var w=critWeights(),tot=0;for(var k in w)tot+=w[k]*r.crit[k];
+  tot*=0.5+0.5*(r.crit.al/100);
+  if(conf.length)tot=Math.min(tot,70);
+  if(md.length)tot=Math.min(tot,78);
+  tot-=Math.min(12,2*unavail.length);
+  r.total=clamp(tot,0,100);
+  r.issues.sort(function(a,b){var o={err:0,warn:1,info:2};return o[a.sev]-o[b.sev]});
+  return r;
+}
+function adjTxt(x){x=Math.round(x*10)/10+0;if(x===0)return '0';return (x>0?'+':'')+fmt(x,1)}
+function vAdj(v){return -v.risk+(S.nov-5)*(v.idx-2)*0.8}
+function evalPack(ids){
+  if(S.ver!=='auto'){var x=score(ids,S.ver);x.auto=false;return x}
+  if(!ids.length){var e=score(ids,'B');e.auto=true;return e}
+  var best=null;
+  VERS.forEach(function(v){var r=score(ids,v.t);r.rank=r.total+vAdj(v);if(!best||r.rank>best.rank)best=r});
+  best.auto=true;return best;
+}
+function recompute(){cur=evalPack(S.pack)}
+function tierLabel(x){
+  if(x>=85)return 'Excelente: alinhado e saudável';
+  if(x>=72)return 'Muito bom, poucos ajustes';
+  if(x>=58)return 'Bom, mas pede ajustes';
+  if(x>=42)return 'Arriscado: falta foco ou sobra peso';
+  return 'Fraco para o objetivo atual';
+}
+function withDeps(id,t,ids){
+  var add=[],seen={};ids.forEach(function(i){seen[i]=1});var ok=true;
+  (function go(i){if(seen[i])return;var m=BY[i];if(!m||m.ver.indexOf(t)<0){ok=false;return}seen[i]=1;m.dep.forEach(go);add.push(i)})(id);
+  return ok?add:null;
+}
+function bestAdds(ids,t,limit){
+  var base=score(ids,t,true),out=[];
+  MODS.forEach(function(m){
+    if(ids.indexOf(m.id)>=0||m.ver.indexOf(t)<0||S.ban.indexOf(m.id)>=0)return;
+    var add=withDeps(m.id,t,ids);if(!add)return;
+    var r=score(ids.concat(add),t,true);out.push({m:m,add:add,gain:r.total-base.total,r:r});
+  });
+  out.sort(function(a,b){return b.gain-a.gain});
+  return {base:base,list:out.slice(0,limit)};
+}
+function autoBuild(t,start){
+  var ids=start.slice(),g=0;
+  while(g++<220){
+    var b=bestAdds(ids,t,1);
+    if(!b.list.length||b.list[0].gain<0.08||ids.length>=S.size*1.15)break;
+    ids=ids.concat(b.list[0].add);
+  }
+  return ids;
+}
+function removeCandidates(ids,t){
+  var base=score(ids,t,true),out=[];
+  ids.forEach(function(id){
+    var needed=ids.some(function(o){return o!==id&&BY[o]&&BY[o].dep.indexOf(id)>=0});
+    if(needed)return;
+    var r=score(ids.filter(function(x){return x!==id}),t,true);
+    out.push({m:BY[id],gain:r.total-base.total,r:r});
+  });
+  out.sort(function(a,b){return b.gain-a.gain});return out;
+}
+function deltaText(a,b){
+  var names={al:'Alinhamento',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos'},w=critWeights(),d=[];
+  for(var k in names){var x=(b.crit[k]-a.crit[k]);if(Math.abs(x)>=1)d.push([k,x,Math.abs(x*w[k])])}
+  d.sort(function(p,q){return q[2]-p[2]});
+  return d.slice(0,3).map(function(x){return (x[1]>0?'+':'')+Math.round(x[1])+' '+names[x[0]]}).join(' · ');
+}
+function recT(){return S.ver!=='auto'?S.ver:(ui.vres?ui.vres.best:(cur&&cur.n?cur.t:'B'))}
+function vkey(){return JSON.stringify([S.w,S.vanilla,S.fps,S.nov,S.size,S.heap,S.ban,S.useLive])}
+function computeVersions(){
+  var rows=VERS.map(function(v){
+    var ids=autoBuild(v.t,[]),r=score(ids,v.t);
+    var have=S.pack.filter(function(i){return BY[i].ver.indexOf(v.t)>=0}).length;
+    return {v:v,ids:ids,r:r,rank:r.total+vAdj(v),have:have};
+  });
+  var best=rows.slice().sort(function(a,b){return b.rank-a.rank})[0];
+  return {rows:rows,best:best.v.t};
+}
+
+/* ============ AÇÕES ============ */
+function addMod(id){
+  if(S.pack.indexOf(id)>=0)return;
+  var t=recT(),add=[],seen={};S.pack.forEach(function(i){seen[i]=1});
+  (function go(i){if(seen[i]||!BY[i])return;seen[i]=1;BY[i].dep.forEach(go);add.push(i)})(id);
+  S.ban=S.ban.filter(function(b){return add.indexOf(b)<0});
+  S.pack=S.pack.concat(add);
+  if(add.length>1)toast('Adicionado '+BY[id].name+' + '+(add.length-1)+' dependência(s).');
+}
+function rmMod(id){S.pack=S.pack.filter(function(i){return i!==id})}
+function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show')},2600)}
+function commit(){
+  persist();recompute();renderTop();renderTabs();
+  if(ui.tab==='catalog')renderGrid();else renderView();
+}
+function applyPreset(id){
+  var p=PRESETS.filter(function(x){return x.id===id})[0];if(!p)return;
+  S.w=clone(p.w);S.vanilla=p.vanilla;S.fps=p.fps;S.size=p.size;S.preset=id;
+  persist();recompute();renderTop();renderView();
+}
+function copyText(txt,okMsg){
+  function fallback(){ui.exportText=txt;renderView();var b=$('#exportBox');if(b){b.focus();b.select()}toast('Copie o texto da caixa abaixo.')}
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast(okMsg||'Copiado.')},fallback)}
+    else fallback();
+  }catch(e){fallback()}
+}
+function catCounts(){var o={};S.pack.forEach(function(i){var m=BY[i];o[m.cat]=(o[m.cat]||0)+1});return o}
+function packList(){
+  var by={};S.pack.forEach(function(i){var m=BY[i];(by[m.cat]=by[m.cat]||[]).push(m)});
+  var out='Total: '+S.pack.length+' mods\n';
+  CATS.forEach(function(c){if(by[c]){out+='\n'+c+' ('+by[c].length+')\n';by[c].forEach(function(m){out+='- '+m.name+'\n'})}});
+  return out.trim();
+}
+function brief(){
+  var top=DIMS.slice().sort(function(a,b){return S.w[b.k]-S.w[a.k]});
+  var v=cur.v,c=cur;
+  return 'Atue como especialista em modpacks de Minecraft Java (Fabric). Pesquise na web (Modrinth, CurseForge, wikis e issues dos mods) e valide o plano abaixo. Não invente: se não achar a informação, diga.\n\n'
+  +'OBJETIVO (0 a 10 por área): '+DIMS.map(function(d){return d.n+' '+S.w[d.k]}).join('; ')+'.\n'
+  +'Fidelidade ao vanilla: '+S.vanilla+'/10. Prioridade de desempenho: '+S.fps+'/10. Vontade de versão nova: '+S.nov+'/10. Tamanho-alvo: ~'+S.size+' mods.\n'
+  +'LIMITES: jogo solo, loader Fabric, '+S.heap+' GB de RAM para o jogo, versão '+(S.ver==='auto'?'a definir (hoje a ferramenta sugere '+v.id+')':v.id)+' (Java '+v.java+').\n\n'
+  +'PACK ATUAL ('+S.pack.length+' mods):\n'+(packList()||'(vazio)')+'\n\n'
+  +'DIAGNÓSTICO DA MINHA FERRAMENTA (estimativas): nota '+Math.round(c.total)+'/100; alinhamento '+Math.round(c.crit.al)+', foco '+Math.round(c.crit.fo)+', desempenho '+Math.round(c.crit.pf)+', estabilidade '+Math.round(c.crit.es)+', escopo '+Math.round(c.crit.sc)+', fundamentos '+Math.round(c.crit.fu)+'. RAM estimada ~'+fmt(c.ram,0)+' MB.\n\n'
+  +'PEDIDO:\n1) Para cada mod, confirme se existe build estável para a versão alvo e a data da última atualização; marque os abandonados.\n2) Liste conflitos, incompatibilidades e dependências faltando.\n3) Sugira mods FORA da lista que sirvam ao objetivo ('+top.slice(0,3).map(function(d){return d.n}).join(', ')+'), com RAM aproximada, e diga o que cortar para compensar.\n4) Diga se outra versão do Minecraft serviria melhor ao objetivo, com base na disponibilidade real dos mods.\n5) Dê uma nota de 0 a 100 justificada por critérios técnicos (alinhamento, foco, desempenho, estabilidade, escopo, fundamentos) e compare com a minha.';
+}
+
+/* ============ RENDER ============ */
+function renderTop(){
+  var c=cur;
+  var lvl=c.empty?'—':String(Math.round(c.total));
+  $('#xp').innerHTML='<div class="lvl">'+lvl+(c.empty?'':'<small>/ 100</small>')+'</div>'
+   +'<div class="xpbar" role="img" aria-label="Nota do pack"><div class="fill" style="width:'+(c.empty?0:c.total)+'%"></div><div class="segs"></div></div>'
+   +'<div class="verdict">'+(c.empty?'Monte o pack ou use a sugestão automática para ver a nota.':esc(tierLabel(c.total)))+'</div>';
+  var ramCls=c.ratio>1?'err':c.ratio>0.85?'warn':'';
+  var h='<span class="chip">'+c.n+' mods</span>'
+   +'<span class="chip '+ramCls+'">RAM ~'+fmt(c.ram/1024,1)+' / '+S.heap+' GB</span>'
+   +'<span class="chip">MC '+esc(c.v.id)+(c.auto?' (auto)':'')+'</span>'
+   +'<span class="chip">Java '+c.v.java+'</span>';
+  if(c.conf||c.miss)h+='<span class="chip err">'+(c.conf+c.miss)+' erro(s)</span>';
+  $('#stats').innerHTML=h;
+}
+function renderTabs(){
+  var T=[['goal','Objetivo'],['catalog','Catálogo'],['pack','Meu pack'],['suggest','Sugestões'],['files','Exportar e importar']];
+  $('#tabs').innerHTML=T.map(function(t){
+    return '<button class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-id="'+t[0]+'">'+t[1]+(t[0]==='pack'&&S.pack.length?'<span class="n">'+S.pack.length+'</span>':'')+'</button>';
+  }).join('')+'<span style="flex:1"></span><button class="theme" data-act="theme" title="Alternar tema claro/escuro">Tema</button>';
+}
+function renderView(){
+  var v=$('#view');
+  var f={goal:vGoal,catalog:vCatalog,pack:vPack,suggest:vSuggest,files:vFiles}[ui.tab];
+  v.innerHTML=f();
+  if(ui.tab==='catalog')renderGrid();
+  if(ui.tab==='suggest')afterSuggest();
+  if(ui.tab==='files')renderImpPrev();
+}
+function slider(k,label,desc,val,min,max,step,unit){
+  return '<div class="slrow"><label for="s_'+k+'"><b>'+label+'</b><span>'+desc+'</span></label>'
+   +'<input type="range" id="s_'+k+'" data-k="'+k+'" min="'+min+'" max="'+max+'" step="'+(step||1)+'" value="'+val+'">'
+   +'<output id="o_'+k+'">'+val+(unit||'')+'</output></div>';
+}
+function vGoal(){
+  var h='<h2>O que você quer jogar?</h2><p class="lead">Defina o objetivo uma vez. Toda nota, sugestão e recomendação de versão deriva dele, então vale ser honesto: pedir tudo ao mesmo tempo é o caminho mais curto para um pack sem identidade.</p>';
+  h+='<section class="block"><h3>Ponto de partida</h3><p class="sub">Escolha um perfil e ajuste os controles abaixo.</p><div class="row">';
+  PRESETS.forEach(function(p){h+='<button class="pre'+(S.preset===p.id?' on':'')+'" data-act="preset" data-id="'+p.id+'" title="'+esc(p.d)+'">'+esc(p.n)+'</button>'});
+  h+='</div>';
+  h+='</section>';
+  h+='<div class="grid2"><section class="block"><h3>O que importa para você</h3><p class="sub">0 = não quero · 10 = é o coração do pack. Marque poucas áreas com nota alta.</p>';
+  DIMS.forEach(function(d){h+=slider(d.k,d.n,d.d,S.w[d.k],0,10)});
+  h+='</section><section class="block"><h3>Estilo e limites</h3><p class="sub">O que molda a pontuação técnica.</p>';
+  h+=slider('vanilla','Fidelidade ao vanilla','0 = overhaul total · 10 = quase vanilla',S.vanilla,0,10);
+  h+=slider('fps','Prioridade de desempenho','Quanto peso o FPS e a RAM têm na nota',S.fps,0,10);
+  h+=slider('nov','Vontade de versão nova','0 = prefiro o mais maduro · 10 = quero o mais recente',S.nov,0,10);
+  h+=slider('size','Tamanho-alvo do pack','Número de mods, incluindo bibliotecas',S.size,15,200,5,' mods');
+  h+='<div class="slrow"><label for="s_heap"><b>RAM para o jogo</b><span>Memória alocada (heap), não a do PC</span></label><select id="s_heap" data-k="heap">'
+   +[2,3,4,6,8].map(function(g){return '<option value="'+g+'"'+(S.heap===g?' selected':'')+'>'+g+' GB</option>'}).join('')+'</select><span></span></div>';
+  h+='<div class="slrow"><label for="s_ver"><b>Versão do Minecraft</b><span>Auto = a ferramenta escolhe pelo seu objetivo</span></label><select id="s_ver" data-k="ver"><option value="auto"'+(S.ver==='auto'?' selected':'')+'>Automática</option>'
+   +VERS.map(function(v){return '<option value="'+v.t+'"'+(S.ver===v.t?' selected':'')+'>'+v.id+'</option>'}).join('')+'</select><span></span></div>';
+  h+='<div class="insight" id="insight"></div></section></div>';
+  h+='<details class="block"><summary>Como a nota é calculada</summary><div style="margin-top:10px;font-size:.92rem">'
+   +'<p>A nota final (0 a 100) soma seis critérios. Os pesos mudam com a sua “prioridade de desempenho”; hoje: '
+   +(function(){var w=critWeights();return 'alinhamento '+Math.round(w.al*100)+'%, foco '+Math.round(w.fo*100)+'%, desempenho '+Math.round(w.pf*100)+'%, estabilidade '+Math.round(w.es*100)+'%, escopo '+Math.round(w.sc*100)+'%, fundamentos '+Math.round(w.fu*100)+'%.'})()+'</p>'
+   +'<ul class="notes" style="font-size:.9rem"><li><b>Alinhamento:</b> cobertura de cada área pedida (45%), similaridade de direção entre o que você pediu e o que o pack entrega (30%) e fidelidade ao vanilla (25%).</li>'
+   +'<li><b>Foco:</b> parcela do conteúdo que cai nas suas áreas prioritárias, mods fora do objetivo e dispersão em áreas indesejadas.</li>'
+   +'<li><b>Desempenho:</b> RAM estimada contra o heap (60%) e carga de CPU somada (40%). Sodium, Lithium e afins entram com custo negativo.</li>'
+   +'<li><b>Estabilidade:</b> conflitos (-30), dependências faltando (-12), mod sem build na versão (-10), redundâncias (-10) e mods experimentais (-3).</li>'
+   +'<li><b>Escopo:</b> distância entre o tamanho do pack e a meta, e excesso de mods muito transformadores competindo.</li>'
+   +'<li><b>Fundamentos:</b> presença dos mods-base de otimização e interface para a versão escolhida.</li></ul>'
+   +'<p>A nota total ainda é reduzida quando o alinhamento é baixo: um pack rápido e estável que não entrega o que você quer não é um bom pack. Conflitos limitam a nota a 70; dependências faltando, a 78.</p>'
+   +'<p class="sub">RAM e CPU por mod são estimativas de ordem de grandeza (conhecimento até meados de 2026), não medições. Meça o seu pack final com o spark.</p></div></details>';
+  h+='<p class="foot">Catálogo curado com ~'+MODS.length+' mods Fabric. Disponibilidade por versão é estimativa: use o link “verificar” de cada mod no Modrinth antes de montar.</p>';
+  setTimeout(renderInsight,0);
+  return h;
+}
+function renderInsight(){
+  var el=$('#insight');if(!el)return;
+  var hi=DIMS.filter(function(d){return S.w[d.k]>=7}),top=DIMS.filter(function(d){return S.w[d.k]>=5}).sort(function(a,b){return S.w[b.k]-S.w[a.k]});
+  var H=S.heap*1024,bud=Math.max(0,0.8*H-1300);
+  var cont=MODS.filter(function(m){return !INFRA[m.cat]&&!m.lib&&m.ram>0});
+  var avg=cont.reduce(function(s,m){return s+m.ram},0)/cont.length;
+  var h='<p><b>Foco atual:</b> '+(top.length?top.slice(0,3).map(function(d){return esc(d.n)+' ('+S.w[d.k]+')'}).join(', '):'nenhuma área acima de 5; o pack tende a ficar sem identidade')+'.</p>';
+  if(hi.length>3)h+='<p><b>Atenção:</b> '+hi.length+' áreas com nota 7 ou mais. Packs com 2 a 3 prioridades altas costumam render mais do que packs que tentam tudo.</p>';
+  h+='<p><b>Orçamento de RAM:</b> cerca de '+fmt(bud,0)+' MB para mods (até 80% de '+S.heap+' GB, descontando ~1,3 GB do jogo base). Um mod de conteúdo custa ~'+fmt(avg,0)+' MB em média no catálogo; os de otimização devolvem memória.</p>';
+  el.innerHTML=h;
+}
+function vCatalog(){
+  var h='<h2>Catálogo de mods</h2><p class="lead">Cada mod mostra o quanto encaixa no seu objetivo, o custo técnico e em quais versões existe build conhecida. Dependências entram sozinhas.</p>';
+  h+='<div class="filters"><input type="search" id="q" placeholder="Buscar por nome ou descrição" value="'+esc(ui.q)+'" aria-label="Buscar mods">'
+   +'<select id="fcat" aria-label="Categoria"><option value="all">Todas as categorias</option>'+CATS.map(function(c){return '<option'+(ui.cat===c?' selected':'')+'>'+c+'</option>'}).join('')+'</select>'
+   +'<select id="fsort" aria-label="Ordenar"><option value="fit"'+(ui.sort==='fit'?' selected':'')+'>Melhor encaixe</option><option value="ram"'+(ui.sort==='ram'?' selected':'')+'>Menor RAM</option><option value="name"'+(ui.sort==='name'?' selected':'')+'>Nome</option></select></div>';
+  h+='<div class="togs"><label><input type="checkbox" id="fav"'+(ui.onlyAvail?' checked':'')+'> Só mods com build na versão atual</label><label><input type="checkbox" id="fban"'+(ui.hideBan?' checked':'')+'> Ocultar descartados</label><span id="gcount"></span></div>';
+  h+='<div id="grid"></div>';
+  h+='<p class="foot">Versão usada nos filtros e no link de verificação: '+esc(cur.v.id)+(cur.auto?' (automática)':'')+'.</p>';
+  return h;
+}
+function mrUrl(m){return 'https://modrinth.com/mods?q='+encodeURIComponent(m.name)+'&g=categories%3Afabric&v='+encodeURIComponent(cur.v.vq)}
+function renderGrid(){
+  var g=$('#grid');if(!g)return;
+  var q=norm(ui.q),t=cur.t;
+  var list=MODS.filter(function(m){
+    if(ui.cat!=='all'&&m.cat!==ui.cat)return false;
+    if(ui.onlyAvail&&m.ver.indexOf(t)<0)return false;
+    if(ui.hideBan&&S.ban.indexOf(m.id)>=0&&S.pack.indexOf(m.id)<0)return false;
+    if(q&&norm(m.name+' '+m.desc+' '+m.cat).indexOf(q)<0)return false;
+    return true;
+  });
+  list.sort(function(a,b){
+    if(ui.sort==='name')return a.name.localeCompare(b.name);
+    if(ui.sort==='ram')return a.ram-b.ram;
+    var fa=modFit(a),fb=modFit(b);return (fb==null?-1:fb)-(fa==null?-1:fa)||a.name.localeCompare(b.name);
+  });
+  $('#gcount').textContent=list.length+' de '+MODS.length+' mods';
+  if(!list.length){g.innerHTML='<div class="empty">Nenhum mod com esses filtros. Desmarque “só mods com build na versão atual” ou limpe a busca.</div>';return}
+  g.innerHTML=list.map(card).join('');
+}
+function card(m){
+  var inP=S.pack.indexOf(m.id)>=0,ban=S.ban.indexOf(m.id)>=0,f=modFit(m);
+  var tags='';
+  if(m.live)tags+='<span class="tag" style="border-color:var(--copper);color:var(--copper)">dados ao vivo</span>';
+  if(m.lib)tags+='<span class="tag">biblioteca</span>';
+  if(m.core)tags+='<span class="tag">fundamento</span>';
+  if(m.heavy)tags+='<span class="tag warn">pesado</span>';
+  if(m.gpu)tags+='<span class="tag warn">usa GPU</span>';
+  if(m.fragile)tags+='<span class="tag warn">experimental</span>';
+  if(m.inv>=3)tags+='<span class="tag">overhaul</span>';
+  if(m.grp)tags+='<span class="tag">'+esc(GR[m.grp])+'</span>';
+  if(m.dep.length&&m.dep.some(function(d){return d!=='fabric-api'}))tags+='<span class="tag">exige: '+esc(m.dep.filter(function(d){return d!=='fabric-api'}).map(function(d){return BY[d]?BY[d].name:d}).join(', '))+'</span>';
+  var fitH=f==null?'<div class="fit">Base<div class="meter"><i style="width:0"></i></div></div>':'<div class="fit"><b>'+Math.round(f*100)+'%</b> encaixe<div class="meter"><i style="width:'+Math.round(f*100)+'%"></i></div></div>';
+  var cost='RAM '+(m.ram>0?'+':'')+m.ram+' MB<br>CPU '+(m.cpu>0?'+':'')+fmt(m.cpu,1);
+  var vts='<div class="vts">'+VERS.map(function(v){return '<i class="vt'+(m.ver.indexOf(v.t)>=0?' on':'')+(cur.t===v.t?' cur':'')+'">'+v.id+'</i>'}).join('')+'</div>';
+  return '<div class="mrow'+(inP?' in':'')+(ban&&!inP?' off':'')+'">'
+   +'<div class="c-main"><div class="mname">'+esc(m.name)+'<small>'+esc(m.cat)+'</small></div><div class="mdesc">'+esc(m.desc)+(m.note?' <em>'+esc(m.note)+'</em>':'')+'</div><div class="tags">'+tags+'</div></div>'
+   +fitH+'<div class="cost mono">'+cost+'</div><div>'+vts+'<a class="vlink" href="'+mrUrl(m)+'" target="_blank" rel="noopener">verificar no Modrinth</a></div>'
+   +'<div class="acts">'+(inP?'<button class="btn danger sm" data-act="rm" data-id="'+m.id+'">Remover</button>':'<button class="btn sm" data-act="add" data-id="'+m.id+'">Adicionar</button>')
+   +(inP?'':'<button class="btn ghost sm" data-act="ban" data-id="'+m.id+'" title="'+(ban?'Voltar a considerar':'Descartar: não sugerir')+'">'+(ban?'Reativar':'Descartar')+'</button>')+'</div></div>';
+}
+function radar(c){
+  var keys=['al','fo','pf','es','sc','fu'],lab=['Alinhamento','Foco','Desempenho','Estabilidade','Escopo','Fundamentos'];
+  var cx=140,cy=120,R=78;
+  function pt(i,v){var a=-Math.PI/2+i*2*Math.PI/6;return [cx+Math.cos(a)*R*v,cy+Math.sin(a)*R*v]}
+  var s='<svg class="radar" viewBox="-50 0 380 240" role="img" aria-label="Radar dos seis critérios">';
+  [0.25,0.5,0.75,1].forEach(function(f){s+='<polygon class="ring" points="'+keys.map(function(k,i){return pt(i,f).join(',')}).join(' ')+'"/>'});
+  keys.forEach(function(k,i){var p=pt(i,1);s+='<line class="axis" x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'"/>'});
+  s+='<polygon class="area" points="'+keys.map(function(k,i){return pt(i,c.crit[k]/100).join(',')}).join(' ')+'"/>';
+  keys.forEach(function(k,i){
+    var a=-Math.PI/2+i*2*Math.PI/6,x=cx+Math.cos(a)*(R+14),y=cy+Math.sin(a)*(R+14)+4,an=Math.cos(a)>0.3?'start':Math.cos(a)<-0.3?'end':'middle';
+    s+='<text x="'+x+'" y="'+y+'" text-anchor="'+an+'">'+lab[i]+' '+Math.round(c.crit[k])+'</text>';
+  });
+  return s+'</svg>';
+}
+function barColor(v){return v>=70?'var(--copper)':v>=45?'var(--gold)':'var(--red)'}
+function vPack(){
+  var c=cur,h='<h2>Meu pack</h2>';
+  if(c.empty){
+    return h+'<div class="empty" style="margin-top:14px"><p><b>Nenhum mod ainda.</b></p><p>Adicione mods pelo Catálogo ou deixe a ferramenta montar uma primeira versão a partir do seu objetivo.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn" data-act="auto" data-mode="replace">Montar pack automaticamente</button><button class="btn ghost" data-act="tab" data-id="catalog">Abrir catálogo</button></div></div>';
+  }
+  var w=critWeights(),names={al:'Alinhamento ao objetivo',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos'};
+  h+='<p class="lead">Nota calculada para '+esc(c.v.id)+(c.auto?' (a versão que melhor encaixa neste pack agora)':'')+'. Cada critério mostra o motivo, não só o número.</p>';
+  h+='<section class="block"><div class="scoregrid"><div>'+radar(c)+'</div><div>';
+  ['al','fo','pf','es','sc','fu'].forEach(function(k){
+    h+='<div class="crit"><div class="h"><b>'+names[k]+'<em>peso '+Math.round(w[k]*100)+'%</em></b><span style="color:'+barColor(c.crit[k])+'">'+Math.round(c.crit[k])+'</span></div><div class="bar"><i style="width:'+c.crit[k]+'%;background:'+barColor(c.crit[k])+'"></i></div><ul class="notes">'+c.notes[k].map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul></div>';
+  });
+  h+='</div></div></section>';
+  h+='<section class="block"><h3>Diagnóstico</h3><p class="sub">Problemas em ordem de gravidade.</p>';
+  if(!c.issues.length)h+='<div class="issue info"><div class="t">Nenhum conflito, dependência faltando ou redundância detectada.</div></div>';
+  c.issues.forEach(function(i){h+='<div class="issue '+i.sev+'"><div class="t">'+i.text+'</div>'+(i.fix?'<button class="btn sm ghost" data-act="'+i.fix.act+'" data-id="'+i.fix.id+'">'+esc(i.fix.label)+'</button>':'')+'</div>'});
+  h+='</section>';
+  h+='<section class="block"><h3>Pedido × entregue</h3><p class="sub">A barra mostra quanto conteúdo o pack entrega em cada área; o traço marca o quanto você pediu.</p>';
+  DIMS.forEach(function(d){
+    var ent=Math.min(1,c.Pd[d.k]/(c.SAT||7)),ped=S.w[d.k]/10,col=ent>=ped*0.8?'var(--copper)':'var(--red)';
+    if(ped<=0.3&&ent>=0.6)col='var(--gold)';
+    h+='<div class="dimrow"><span>'+esc(d.n)+'</span><div class="dtrack"><i style="width:'+Math.round(ent*100)+'%;background:'+col+'"></i><u style="left:calc('+Math.round(ped*100)+'% - 1px)"></u></div><span class="mono">'+S.w[d.k]+' → '+Math.round(ent*10)+'</span></div>';
+  });
+  h+='<p class="legend">Vermelho: falta conteúdo. Âmbar: conteúdo numa área que você quase não pediu (dispersão).</p></section>';
+  h+='<section class="block"><h3>Lista de mods ('+c.n+')</h3>';
+  var by={};S.pack.forEach(function(i){var m=BY[i];(by[m.cat]=by[m.cat]||[]).push(m)});
+  CATS.forEach(function(cat){
+    if(!by[cat])return;
+    h+='<div class="cgroup">'+cat+' ('+by[cat].length+')</div>';
+    by[cat].forEach(function(m){var f=modFit(m);
+      h+='<div class="prow"><span>'+esc(m.name)+(m.ver.indexOf(c.t)<0?' <span class="tag err">sem build em '+esc(c.v.id)+'</span>':'')+'</span><span class="mono hide-m">'+(f==null?'base':Math.round(f*100)+'%')+'</span><span class="mono hide-m">'+(m.ram>0?'+':'')+m.ram+' MB</span><button class="btn ghost sm" data-act="rm" data-id="'+m.id+'">Remover</button></div>';
+    });
+  });
+  h+='<div class="row" style="margin-top:16px"><button class="btn" data-act="tab" data-id="files">Exportar ou importar…</button><button class="btn ghost" data-act="copylist">Copiar lista</button><button class="btn ghost" data-act="copybrief">Copiar briefing para pesquisa</button><button class="btn danger" data-act="clear">Limpar pack</button></div>';
+  if(ui.exportText)h+='<textarea id="exportBox" class="exp" readonly style="margin-top:12px">'+esc(ui.exportText)+'</textarea>';
+  h+='</section>';
+  return h;
+}
+function vSuggest(){
+  var c=cur,t=recT();
+  var h='<h2>Sugestões</h2><p class="lead">Tudo aqui é recalculado a partir da sua nota: cada sugestão mostra quantos pontos o pack ganha ou perde e em quais critérios.</p>';
+  h+='<section class="block"><h3>Versão ideal para o seu objetivo</h3><p class="sub">Para cada versão, a ferramenta monta o melhor pack possível só com mods que têm build conhecida nela. A recomendação considera a nota, o risco da versão e a sua vontade de usar o mais novo.</p><div id="vbox"><div class="empty">Calculando…</div></div></section>';
+  h+='<section class="block"><h3>Verificação ao vivo (Modrinth)</h3><div id="liveBox"></div></section>';
+  var b=bestAdds(S.pack,t,10);
+  h+='<section class="block"><h3>Melhores adições agora</h3><p class="sub">Em '+esc(VT[t].id)+'. Dependências necessárias entram junto.</p>';
+  if(!b.list.length)h+='<div class="empty">Nenhuma adição melhora a nota. O pack está saturado para este objetivo.</div>';
+  b.list.forEach(function(x){
+    h+='<div class="sugrow"><div><b>'+esc(x.m.name)+'</b>'+(x.add.length>1?' <span class="tag">+'+(x.add.length-1)+' dependência(s)</span>':'')+'<div class="why">'+esc(x.m.desc)+'<br>'+esc(deltaText(b.base,x.r)||'efeito pequeno')+'</div></div><div class="gain'+(x.gain<0?' neg':'')+'">'+(x.gain>0?'+':'')+fmt(x.gain,1)+'</div><button class="btn sm" data-act="add" data-id="'+x.m.id+'">Adicionar</button></div>';
+  });
+  h+='</section>';
+  if(S.pack.length){
+    var rc=removeCandidates(S.pack,t).filter(function(x){return x.gain>0.1}).slice(0,8);
+    h+='<section class="block"><h3>Candidatos a cortar</h3><p class="sub">Mods cuja remoção melhora a nota (peso morto, fora do foco ou custo alto).</p>';
+    if(!rc.length)h+='<div class="empty">Nada a cortar: nenhum mod remove peso sem perder valor.</div>';
+    rc.forEach(function(x){h+='<div class="sugrow"><div><b>'+esc(x.m.name)+'</b><div class="why">'+esc(deltaText(cur.t===t?cur:score(S.pack,t),x.r)||'efeito pequeno')+'</div></div><div class="gain">+'+fmt(x.gain,1)+'</div><button class="btn danger sm" data-act="rm" data-id="'+x.m.id+'">Remover</button></div>'});
+    h+='</section>';
+  }
+  h+='<section class="block"><h3>Montar pack automaticamente</h3><p class="sub">Algoritmo guloso: adiciona sempre o mod que mais aumenta a nota e para quando nada melhora, ou ao chegar perto da meta de tamanho ('+S.size+'). Pode parar antes da meta: mais mods não significaria um pack melhor.</p><div class="row"><button class="btn" data-act="auto" data-mode="replace">Montar do zero</button>'+(S.pack.length?'<button class="btn ghost" data-act="auto" data-mode="complete">Completar o pack atual</button>':'')+'</div></section>';
+  return h;
+}
+function afterSuggest(){
+  renderLive();
+  var key=vkey();
+  var box=$('#vbox');if(!box)return;
+  if(ui.vkey===key&&ui.vres){drawVersions();return}
+  setTimeout(function(){ui.vres=computeVersions();ui.vkey=key;drawVersions()},30);
+}
+function drawVersions(){
+  var box=$('#vbox');if(!box||!ui.vres)return;
+  var r=ui.vres,h='<div class="scroll"><table><thead><tr><th>Versão</th><th>Melhor pack possível</th><th>Seu pack nela</th><th>Notas</th></tr></thead><tbody>';
+  r.rows.forEach(function(x){
+    var isBest=x.v.t===r.best;
+    h+='<tr class="'+(isBest?'best':'')+'"><td><b>'+x.v.id+'</b>'+(isBest?'<div class="tag" style="display:inline-block;margin-left:6px;border-color:var(--xp);color:var(--xp)">recomendada</div>':'')+'<div class="sub" style="margin:0">Java '+x.v.java+'</div></td>'
+     +'<td class="mono"><b>'+Math.round(x.r.total)+'</b>/100 com '+x.ids.length+' mods<div class="sub" style="margin:0">ajuste da versão '+adjTxt(vAdj(x.v))+'</div></td>'
+     +'<td class="mono">'+(S.pack.length?x.have+' de '+S.pack.length+' mods com build':'—')+'</td>'
+     +'<td style="font-size:.85rem;color:var(--muted)">'+esc(x.v.note)+'</td></tr>';
+  });
+  h+='</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn" data-act="usever" data-id="'+r.best+'">Fixar '+VT[r.best].id+'</button><button class="btn ghost" data-act="usever" data-id="auto">Deixar automática</button></div><p class="sub" style="margin-top:10px">Disponibilidade por versão vem de conhecimento até meados de 2026 e de buscas pontuais; confirme no Modrinth antes de baixar. Versões ainda mais novas que a 26.2 podem existir.</p>';
+  box.innerHTML=h;
+}
+function slug(){return (S.name||'modpack').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'')||'modpack'}
+function exportObj(){
+  var c=cur,cr={};for(var k in c.crit)cr[k]=Math.round(c.crit[k]);
+  return {app:'forja-de-modpack',versao:1,exportadoEm:new Date().toISOString(),nome:S.name,quantidade:S.pack.length,
+    objetivo:{areas:clone(S.w),fidelidadeVanilla:S.vanilla,prioridadeDesempenho:S.fps,vontadeVersaoNova:S.nov,tamanhoAlvo:S.size,ramGB:S.heap,versao:S.ver,perfil:S.preset||''},
+    mods:S.pack.slice(),descartados:S.ban.slice(),
+    resumo:{nota:Math.round(c.total),porCategoria:catCounts(),minecraft:c.v.id,java:c.v.java,ramEstimadaMB:Math.round(c.ram),criterios:cr,modsPorNome:S.pack.map(function(i){return BY[i].name})}};
+}
+function txtExport(){
+  var c=cur,o='';
+  o+=S.name+' — Fabric '+c.v.id+' (Java '+c.v.java+') — nota '+Math.round(c.total)+'/100\n';
+  o+='RAM: '+S.heap+' GB (estimada ~'+fmt(c.ram,0)+' MB) · '+c.n+' mods\n';
+  o+='Versão do Minecraft: '+(S.ver==='auto'?'automática':VT[S.ver].id)+'\n\nOBJETIVO\n';
+  o+=DIMS.map(function(d){return d.n+': '+S.w[d.k]}).join('\n')+'\n';
+  o+='Fidelidade ao vanilla: '+S.vanilla+' · Prioridade de desempenho: '+S.fps+' · Vontade de versão nova: '+S.nov+' · Tamanho-alvo: '+S.size+'\n\nMODS\n';
+  return o+(packList()||'(vazio)')+'\n';
+}
+function dl(name,text,mime){
+  if(DL){DL.save({filename:name,data:text}).then(function(){toast('Arquivo salvo.')}).catch(function(e){if(e&&e.code!=='declined')toast('Não foi possível salvar o arquivo.')});return}
+  try{
+    var b=new Blob([text],{type:mime||'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');
+    a.href=u;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u)},400);toast('Download iniciado.');
+  }catch(e){toast('Não foi possível baixar. Use “Copiar JSON”.')}
+}
+var NAMEIDX=null;
+function normName(x){return norm(x).replace(/[’'`´]/g,'').replace(/[^a-z0-9]+/g,'')}
+function nameIdx(){if(!NAMEIDX){NAMEIDX={};MODS.forEach(function(m){NAMEIDX[normName(m.name)]=m.id;NAMEIDX[normName(m.id)]=m.id})}return NAMEIDX}
+function missingDeps(ids){var set={},out=[];ids.forEach(function(i){set[i]=1});ids.forEach(function(i){BY[i].dep.forEach(function(d){if(!set[d]&&BY[d]&&out.indexOf(BY[d].name)<0)out.push(BY[d].name)})});return out}
+function withAllDeps(ids){
+  var out=ids.slice(),seen={};out.forEach(function(i){seen[i]=1});
+  for(var q=0;q<out.length;q++){BY[out[q]].dep.forEach(function(d){if(!seen[d]&&BY[d]){seen[d]=1;out.push(d)}})}
+  return out;
+}
+function parseImport(text){
+  var o;try{o=JSON.parse(text)}catch(e){return {err:'O texto não é um JSON válido. Use um arquivo exportado por esta ferramenta ou uma lista .txt.'}}
+  if(!o||o.app!=='forja-de-modpack')return {err:'Este arquivo não parece ser um pack da Forja de Modpack.'};
+  var ob=o.objetivo||{},w=clone(DEF.w);
+  DIMS.forEach(function(d){var v=ob.areas&&ob.areas[d.k];if(typeof v==='number')w[d.k]=clamp(Math.round(v),0,10)});
+  var num=function(v,a,b,df){return typeof v==='number'?clamp(Math.round(v),a,b):df};
+  var known=function(arr){var k=[],u=[];(Array.isArray(arr)?arr:[]).forEach(function(i){if(typeof i==='string'&&BY[i]){if(k.indexOf(i)<0)k.push(i)}else u.push(String(i))});return {k:k,u:u}};
+  var pk=known(o.mods),bn=known(o.descartados),listed=Array.isArray(o.mods)?o.mods.length:0,warns=[];
+  var declared=typeof o.quantidade==='number'?o.quantidade:null;
+  if(declared!==null&&declared!==listed)warns.push('O arquivo declara '+declared+' mods, mas a lista tem '+listed+'.');
+  return {kind:'json',ok:{pack:pk.k,ban:bn.k.filter(function(i){return pk.k.indexOf(i)<0}),
+    opts:{name:String(o.nome||'Meu modpack').slice(0,40),w:w,vanilla:num(ob.fidelidadeVanilla,0,10,DEF.vanilla),fps:num(ob.prioridadeDesempenho,0,10,DEF.fps),nov:num(ob.vontadeVersaoNova,0,10,DEF.nov),size:num(ob.tamanhoAlvo,15,200,DEF.size),
+      heap:[2,3,4,6,8].indexOf(ob.ramGB)>=0?ob.ramGB:4,ver:(ob.versao==='auto'||VT[ob.versao])?ob.versao:'auto',preset:typeof ob.perfil==='string'?ob.perfil:''}},
+    unk:pk.u.concat(bn.u),dupes:Math.max(0,listed-pk.k.length-pk.u.length),declared:declared,listed:listed,warns:warns,onlyOpts:(listed===0&&!!o.objetivo),nota:o.resumo&&o.resumo.nota,data:o.exportadoEm};
+}
+function parseList(text){
+  var idx=nameIdx(),lines=String(text).replace(/^\uFEFF/,'').split(/\r?\n/),ids=[],unk=[],dupes=0,declared=null,warns=[];
+  var cat='',catN=null,catSeen=0,opts={},hasOpts=false,first=true;
+  function closeCat(){if(cat&&catN!==null&&catN!==catSeen)warns.push('A categoria “'+cat+'” declara '+catN+' mod(s), mas a lista tem '+catSeen+'.')}
+  lines.forEach(function(raw){
+    var l=raw.trim();if(!l)return;
+    var b=l.match(/^(?:[-*•–]|\d+[.)])\s+(.+)$/);
+    if(b){
+      var nm=b[1].trim(),id=idx[normName(nm)];
+      if(!id){id=idx[normName(nm.replace(/\s*\([^)]*\)\s*$/,''))]}
+      catSeen++;first=false;
+      if(!id)unk.push(nm);else if(ids.indexOf(id)>=0)dupes++;else ids.push(id);
+      return;
+    }
+    if(first){first=false;var t=l.match(/^(.+?)\s+—\s+/);if(t){opts.name=t[1].slice(0,40);hasOpts=true;return}}
+    var tm=l.match(/^total\b[^\d]*(\d+)/i);if(tm){declared=+tm[1];return}
+    var vv=l.match(/^Vers[aã]o do Minecraft:\s*(.+)$/i);
+    if(vv){var vs=vv[1].trim().toLowerCase().split(/[\s(]/)[0];
+      if(vs.indexOf('auto')===0){opts.ver='auto';hasOpts=true}
+      else{var vf=VERS.filter(function(x){return x.id.toLowerCase()===vs})[0];if(vf){opts.ver=vf.t;hasOpts=true}}
+      return}
+    var rm=l.match(/RAM:\s*(\d+)\s*GB/i);
+    if(rm){var hp=+rm[1];if([2,3,4,6,8].indexOf(hp)>=0){opts.heap=hp;hasOpts=true}var dm=l.match(/(\d+)\s*mods/i);if(dm&&declared===null)declared=+dm[1];return}
+    var vm=l.match(/Fidelidade ao vanilla:\s*(\d+).*?Prioridade de desempenho:\s*(\d+).*?Vontade de versão nova:\s*(\d+).*?Tamanho-alvo:\s*(\d+)/i);
+    if(vm){opts.vanilla=clamp(+vm[1],0,10);opts.fps=clamp(+vm[2],0,10);opts.nov=clamp(+vm[3],0,10);opts.size=clamp(+vm[4],15,200);hasOpts=true;return}
+    var om=l.match(/^(.+?):\s*(\d+)\s*$/);
+    if(om){var dim=DIMS.filter(function(d){return norm(d.n)===norm(om[1].trim())})[0];if(dim){(opts.w=opts.w||{})[dim.k]=clamp(+om[2],0,10);hasOpts=true;return}}
+    var hm=l.match(/^(.+?)\s*\((\d+)\)\s*$/),hn=hm?hm[1].trim():l;
+    if(CATS.indexOf(hn)>=0){closeCat();cat=hn;catN=hm?+hm[2]:null;catSeen=0}
+  });
+  closeCat();
+  var listed=ids.length+dupes+unk.length;
+  if(!listed){
+    if(hasOpts)return {kind:'txt',onlyOpts:true,ok:{pack:[],ban:null,opts:opts},unk:[],dupes:0,declared:null,listed:0,warns:[]};
+    return {err:'Nada reconhecido. Use o nome da categoria numa linha e cada mod com “- ” na frente, ou linhas de opções como “Tecnologia e automação: 7”.'};
+  }
+  if(declared!==null&&declared!==listed)warns.push('O arquivo declara '+declared+' mods, mas a lista tem '+listed+' item(ns).');
+  return {kind:'txt',ok:{pack:ids,ban:null,opts:hasOpts?opts:null},unk:unk,dupes:dupes,declared:declared,listed:listed,warns:warns};
+}
+function impParse(text){
+  ui.imp.text=text;var t=String(text).replace(/^\uFEFF/,'').trim();
+  ui.imp.res=!t?null:(t.charAt(0)==='{'?parseImport(t):parseList(t));
+  renderImpPrev();
+}
+function renderImpPrev(){
+  var el=$('#impPrev');if(!el)return;var r=ui.imp.res;
+  if(!r){el.innerHTML='';return}
+  if(r.err){el.innerHTML='<div class="issue err" style="margin-top:12px"><div class="t">'+esc(r.err)+'</div></div>';return}
+  var o=r.ok,miss=r.onlyOpts?[]:missingDeps(o.pack),d=r.data?new Date(r.data):null,sum;
+  if(r.onlyOpts){
+    var ks=o.opts?Object.keys(o.opts).filter(function(k){return k!=='w'}).length+(o.opts.w?Object.keys(o.opts.w).length:0):0;
+    sum='<b>Só as opções do Objetivo</b> (nenhum mod na lista): '+ks+' valor(es) encontrado(s). O pack atual não será alterado'+(o.opts&&o.opts.ver!==undefined?' · versão: '+(o.opts.ver==='auto'?'automática':VT[o.opts.ver].id):'');
+  }else{
+    sum='<b>'+o.pack.length+' mods reconhecidos</b>';
+    if(r.declared!=null)sum+=' · o arquivo declara '+r.declared;
+    if(r.dupes)sum+=' · '+r.dupes+' repetido(s) ignorado(s)';
+    if(o.opts&&o.opts.name)sum+=' · pack “'+esc(o.opts.name)+'”';
+    if(typeof r.nota==='number')sum+=' · nota exportada '+r.nota+'/100';
+    if(d&&!isNaN(d))sum+=' · exportado em '+d.toLocaleDateString('pt-BR');
+    sum+=o.opts?' · inclui as opções do Objetivo':' · só a lista de mods (suas opções atuais ficam como estão)';
+  }
+  var h='<div class="issue info" style="margin-top:12px"><div class="t">'+sum+'.</div></div>';
+  if(r.unk&&r.unk.length)h+='<div class="issue warn"><div class="t"><b>'+r.unk.length+' não reconhecido(s)</b>, fora deste catálogo ou escritos de outro jeito: '+esc(r.unk.slice(0,10).join(', '))+(r.unk.length>10?'…':'')+'. Serão ignorados.</div></div>';
+  (r.warns||[]).forEach(function(w){h+='<div class="issue warn"><div class="t">'+esc(w)+'</div></div>'});
+  if(miss.length)h+='<div class="issue info"><div class="t"><b>'+miss.length+' dependência(s) fora da lista</b>: '+esc(miss.slice(0,8).join(', '))+(miss.length>8?'…':'')+'. <label style="display:inline-flex;gap:6px;align-items:center;margin-left:6px"><input type="checkbox" id="impdeps"> incluir ao importar</label></div></div>';
+  var btns;
+  if(r.onlyOpts)btns='<button class="btn" data-act="impapply" data-mode="opts">Aplicar opções do Objetivo</button>';
+  else{
+    btns='<button class="btn" data-act="impapply" data-mode="replace">'+(r.kind==='txt'?'Substituir pack atual':'Aplicar importação')+'</button>';
+    if(r.kind==='txt')btns+='<button class="btn ghost" data-act="impapply" data-mode="add">Somar ao pack atual</button>';
+    if(o.opts)btns+='<button class="btn ghost" data-act="impapply" data-mode="opts">Só as opções do Objetivo</button>';
+  }
+  h+='<div class="row" style="margin-top:10px">'+btns+'</div>';
+  el.innerHTML=h;
+}
+function applyOpts(o){
+  if(o.name)S.name=o.name;
+  if(o.w)S.w=Object.assign({},S.w,o.w);
+  ['vanilla','fps','nov','size','heap','ver'].forEach(function(k){if(o[k]!==undefined)S[k]=o[k]});
+  if(o.preset!==undefined)S.preset=o.preset;else S.preset='';
+}
+function vFiles(){
+  var cc=catCounts(),sum=S.pack.length?CATS.filter(function(c){return cc[c]}).map(function(c){return c+' '+cc[c]}).join(' · '):'vazio';
+  var h='<h2>Exportar e importar</h2><p class="lead">Salve o pack com todas as opções do Objetivo e retome depois, nesta ou em outra máquina. O pack também fica guardado automaticamente neste navegador.</p>';
+  h+='<section class="block"><h3>Exportar</h3><p class="sub"><b>Pack atual: '+S.pack.length+' mods</b> ('+esc(sum)+'). O .json guarda tudo (objetivo, RAM, versão, mods, descartados e a quantidade). O .txt traz as opções do Objetivo e a lista por categoria, com a quantidade de mods, e também pode ser importado de volta.</p>'
+   +'<div class="row"><button class="btn" data-act="dljson">Baixar pack (.json)</button><button class="btn ghost" data-act="dltxt">Baixar lista (.txt)</button><button class="btn ghost" data-act="copyjson">Copiar JSON</button><button class="btn ghost" data-act="copylist">Copiar lista</button></div>';
+  if(ui.exportText)h+='<textarea id="exportBox" class="exp" readonly style="margin-top:12px">'+esc(ui.exportText)+'</textarea>';
+  h+='</section><section class="block"><h3>Importar</h3><p class="sub">Aceita o .json ou uma lista .txt. Os mods são reconhecidos pelo nome, sem diferenciar maiúsculas, acentos ou apóstrofos. A quantidade, quando está no arquivo, serve de conferência. Também dá para importar só as opções do Objetivo, mantendo o pack atual. Nada é alterado até você aplicar.</p>'
+   +'<div class="row" style="margin-bottom:10px"><input type="file" id="impFile" accept=".json,.txt,application/json,text/plain" aria-label="Arquivo do pack"></div>'
+   +'<textarea id="impText" aria-label="JSON ou lista de mods" placeholder="Ou cole aqui o JSON ou a lista de mods">'+esc(ui.imp.text)+'</textarea><div id="impPrev"></div>'
+   +'<details><summary>Formato da lista .txt</summary><pre class="exp" style="min-height:0;padding:10px;background:var(--panel2);border:1px solid var(--line);overflow:auto">Otimização (3)\n- Sodium\n- Lithium\n- FerriteCore\n\nBibliotecas\n- Fabric API</pre><p class="sub">Uma categoria por linha (a quantidade entre parênteses é opcional) e cada mod com “- ” na frente. As categorias servem só para organizar; o que vale é o nome de cada mod.</p><p class="sub">Para importar só as opções, use apenas linhas como estas (o que você omitir fica como está):</p><pre class="exp" style="min-height:0;padding:10px;background:var(--panel2);border:1px solid var(--line);overflow:auto">Tecnologia e automação: 7\nConstrução e decoração: 6\nFidelidade ao vanilla: 8 · Prioridade de desempenho: 10 · Vontade de versão nova: 5 · Tamanho-alvo: 40\nRAM: 4 GB\nVersão do Minecraft: 1.21.1</pre></details></section>';
+  h+='<section class="block"><h3>Briefing para pesquisa</h3><p class="sub">Gera um texto com objetivo, limites, pack e diagnóstico para você levar a uma conversa com busca na web e validar versões, achar mods novos e checar conflitos reais.</p><div class="row"><button class="btn ghost" data-act="copybrief">Copiar briefing</button></div></section>';
+  return h;
+}
+
+/* ============ VERIFICAÇÃO AO VIVO (Modrinth) ============ */
+var API='https://api.modrinth.com/v2',LKEY='forja-live-v1';
+var GVMAP={A:['1.20.1'],B:['1.21.1'],C:['1.21.11'],D:['26.1','26.1.1','26.1.2'],E:['26.2']};
+var QOVR={create:'Create Fabric',createrails:'Create: Steam ’n’ Rails',rei:'Roughly Enough Items',jei:'Just Enough Items',spark:'spark',wizards:'Wizards (RPG Series)',paladins:'Paladins & Priests (RPG Series)',archers:'Archers (RPG Series)',ctov:'ChoiceTheorem’s Overhauled Village',iris:'Iris Shaders'};
+var NOLIVE={shaders:1};
+var NET=!window.claude;
+var LIVE=(function(){try{var r=localStorage.getItem(LKEY);var o=r?JSON.parse(r):null;return(o&&o.mods)?o:{ts:0,mods:{}}}catch(e){return {ts:0,mods:{}}}})();
+function liveSave(){try{localStorage.setItem(LKEY,JSON.stringify(LIVE))}catch(e){}}
+function applyLive(){
+  MODS.forEach(function(m){
+    if(m.ver0===undefined)m.ver0=m.ver;
+    var L=LIVE.mods[m.id];
+    if(S.useLive&&L&&L.found&&L.tiers){var v='';VERS.forEach(function(x){if(L.tiers[x.t])v+=x.t});m.ver=v;m.live=true}
+    else{m.ver=m.ver0;m.live=false}
+  });
+}
+function getJSON(url,signal){
+  return fetch(url,{signal:signal}).then(function(r){if(!r.ok){var e=new Error('http');e.status=r.status;throw e}return r.json()});
+}
+async function findProject(m,signal){
+  var q=QOVR[m.id]||m.name,nq=normName(q),best=null;
+  var facets=encodeURIComponent('[["project_type:mod"],["categories:fabric"]]');
+  var j=await getJSON(API+'/search?query='+encodeURIComponent(q)+'&facets='+facets+'&limit=8',signal);
+  (j.hits||[]).forEach(function(h){
+    var nt=normName(h.title),sc=nt===nq?3:(nt.indexOf(nq)===0?2:(nt.indexOf(nq)>=0||(nt.length>=8&&nq.indexOf(nt)>=0)?1:0));
+    if(sc&&(!best||sc>best.sc||(sc===best.sc&&h.downloads>best.h.downloads)))best={sc:sc,h:h};
+  });
+  return best?best.h:null;
+}
+async function liveOne(m,signal){
+  var h=await findProject(m,signal);
+  if(!h)return {found:false};
+  var gv=[];VERS.forEach(function(v){gv=gv.concat(GVMAP[v.t])});
+  var url=API+'/project/'+encodeURIComponent(h.project_id)+'/version?loaders='+encodeURIComponent('["fabric"]')+'&game_versions='+encodeURIComponent(JSON.stringify(gv))+'&include_changelog=false';
+  var vs=await getJSON(url,signal),tiers={};
+  VERS.forEach(function(v){
+    var c=vs.filter(function(x){return (x.game_versions||[]).some(function(g){return GVMAP[v.t].indexOf(g)>=0})});
+    if(!c.length){tiers[v.t]=null;return}
+    c.sort(function(a,b){return String(b.date_published).localeCompare(String(a.date_published))});
+    var rel=c.filter(function(x){return x.version_type==='release'}),pk=rel[0]||c[0];
+    tiers[v.t]={v:pk.version_number,d:String(pk.date_published).slice(0,10),t:pk.version_type};
+  });
+  return {found:true,pid:h.project_id,slug:h.slug,title:h.title,tiers:tiers,ts:Date.now()};
+}
+async function runLive(ids){
+  if(ui.live.running)return;
+  var ctl=new AbortController();
+  ui.live={running:true,done:0,total:ids.length,err:'',ctl:ctl,cur:''};
+  renderLive();
+  var q=ids.slice(),fail=false;
+  async function worker(){
+    while(q.length&&!fail&&!ctl.signal.aborted){
+      var id=q.shift(),m=BY[id];
+      if(NOLIVE[id]){ui.live.done++;continue}
+      try{LIVE.mods[id]=await liveOne(m,ctl.signal)}
+      catch(e){
+        if(e&&e.name==='AbortError')return;
+        if(e&&e.status===429){fail=true;ui.live.err='O Modrinth limitou as requisições. Aguarde cerca de 1 minuto e tente de novo.';return}
+        if(e&&e.status){LIVE.mods[id]={found:false,error:e.status}}
+        else{fail=true;ui.live.err='Não foi possível acessar a API do Modrinth a partir deste ambiente (rede bloqueada ou política de segurança do navegador). Abra a versão hospedada (por exemplo, no GitHub Pages) e tente de novo.';return}
+      }
+      ui.live.done++;ui.live.cur=m.name;renderLiveProg();
+    }
+  }
+  var ws=[];for(var i=0;i<4;i++)ws.push(worker());
+  await Promise.all(ws);
+  LIVE.ts=Date.now();liveSave();applyLive();
+  ui.live.running=false;ui.live.ctl=null;ui.vkey='';
+  recompute();renderTop();renderTabs();
+  if(ui.tab==='suggest')renderView();else if(ui.tab==='catalog')renderGrid();
+}
+function liveProgText(){
+  var lv=ui.live;
+  if(lv.running)return 'Verificando… '+lv.done+' de '+lv.total+(lv.cur?' ('+esc(lv.cur)+')':'');
+  if(lv.err)return '<span style="color:var(--red)">'+esc(lv.err)+'</span>';
+  var f=0,nf=0;for(var k in LIVE.mods){if(LIVE.mods[k].found)f++;else nf++}
+  if(LIVE.ts&&(f||nf)){var d=new Date(LIVE.ts);return 'Última verificação: '+d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+f+' mod(s) encontrado(s) no Modrinth'+(nf?', '+nf+' sem correspondência':'')+'.'}
+  return '';
+}
+function renderLiveProg(){var el=$('#liveProg');if(el)el.innerHTML=liveProgText()}
+function liveResults(){
+  var rows=S.pack.map(function(id){return {m:BY[id],L:LIVE.mods[id]}});
+  var known=rows.filter(function(r){return r.L&&r.L.found}),unk=rows.filter(function(r){return !(r.L&&r.L.found)});
+  if(!known.length)return '';
+  var miss={};VERS.forEach(function(v){miss[v.t]=known.filter(function(r){return !r.L.tiers[v.t]}).map(function(r){return r.m.name})});
+  var common=VERS.filter(function(v){return !miss[v.t].length});
+  var h='<div class="insight" style="margin-top:14px">';
+  if(common.length)h+='<p><b>Versão em comum: '+common.map(function(v){return v.id}).join(', ')+'.</b> Todos os '+known.length+' mods verificados têm build Fabric nela'+(common.length>1?'s':'')+'.</p>';
+  else{
+    var near=VERS.slice().sort(function(a,b){return miss[a.t].length-miss[b.t].length})[0];
+    h+='<p><b>Nenhuma versão tem todos os mods.</b> Mais perto: '+near.id+', faltam '+miss[near.t].length+': '+esc(miss[near.t].join(', '))+'.</p>';
+  }
+  if(unk.length)h+='<p>Sem dados ao vivo ('+unk.length+'): '+esc(unk.map(function(r){return r.m.name}).join(', '))+'. Não foram encontrados no Modrinth ou ainda não foram verificados.</p>';
+  h+='</div><div class="scroll" style="margin-top:12px"><table><thead><tr><th>Mod</th>'+VERS.map(function(v){return '<th style="text-align:center">'+v.id+'<div class="sub" style="margin:0">'+(known.length-miss[v.t].length)+'/'+known.length+'</div></th>'}).join('')+'</tr></thead><tbody>';
+  CATS.forEach(function(c){
+    rows.filter(function(r){return r.m.cat===c}).forEach(function(r){
+      var nm=r.L&&r.L.slug?'<a class="vlink" href="https://modrinth.com/mod/'+encodeURIComponent(r.L.slug)+'" target="_blank" rel="noopener">'+esc(r.m.name)+'</a>':esc(r.m.name);
+      h+='<tr><td>'+nm+'</td>'+VERS.map(function(v){
+        if(!(r.L&&r.L.found))return '<td style="text-align:center" class="lv-q">?</td>';
+        var t=r.L.tiers[v.t];
+        return t?'<td style="text-align:center" class="lv-y" title="'+esc(t.v+' · '+t.d)+'">✓</td>':'<td style="text-align:center" class="lv-n">—</td>';
+      }).join('')+'</tr>';
+    });
+  });
+  return h+'</tbody></table></div><p class="sub" style="margin-top:8px">Passe o mouse sobre o ✓ para ver a build mais recente e a data. Dados do Modrinth (loader Fabric); builds em beta ou alpha também contam.</p>';
+}
+function liveHTML(){
+  var lv=ui.live,n=S.pack.length;
+  var h='<p class="sub">Consulta o Modrinth (loader Fabric) e mostra, mod por mod, em quais versões existe build de verdade. O resultado corrige o catálogo e passa a valer nas notas e nas recomendações.</p>';
+  if(!NET)h+='<div class="issue info"><div class="t">Esta verificação só funciona fora do claude.ai, por exemplo na versão hospedada no GitHub Pages. Aqui o navegador bloqueia chamadas de rede.</div></div>';
+  else{
+    h+='<div class="row"><button class="btn" data-act="livepack"'+((lv.running||!n)?' disabled':'')+'>Verificar os '+n+' mods do pack</button><button class="btn ghost" data-act="livecat"'+(lv.running?' disabled':'')+'>Verificar o catálogo inteiro ('+MODS.length+')</button>'+(lv.running?'<button class="btn danger" data-act="livestop">Parar</button>':'')+'</div>';
+  }
+  h+='<p class="sub" id="liveProg" style="margin-top:8px">'+liveProgText()+'</p>';
+  h+='<label style="display:flex;gap:8px;align-items:center;font-size:.9rem;margin:6px 0"><input type="checkbox" id="uselive"'+(S.useLive?' checked':'')+'> Usar os dados ao vivo nas notas e recomendações</label>';
+  return h+liveResults();
+}
+function renderLive(){var el=$('#liveBox');if(el)el.innerHTML=liveHTML()}
+
+/* ============ EVENTOS ============ */
+function arm(el,fn,label){
+  if(!label||!el){fn();return}
+  if(el.dataset.armed){delete el.dataset.armed;fn();return}
+  el.dataset.armed='1';var t=el.textContent;el.textContent=label+' Clique de novo.';
+  setTimeout(function(){if(el&&el.dataset){delete el.dataset.armed;el.textContent=t}},3500);
+}
+function act(a,d,el){
+  switch(a){
+    case 'tab':ui.tab=d.id;ui.exportText='';renderTabs();renderView();window.scrollTo({top:0,behavior:'auto'});break;
+    case 'theme':{var cs=document.documentElement.getAttribute('data-theme');var dark=cs?cs==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');break}
+    case 'preset':applyPreset(d.id);break;
+    case 'add':addMod(d.id);commit();break;
+    case 'rm':rmMod(d.id);commit();break;
+    case 'ban':{var i=S.ban.indexOf(d.id);if(i>=0)S.ban.splice(i,1);else S.ban.push(d.id);commit();break}
+    case 'clear':arm(el,function(){S.pack=[];ui.exportText='';commit()},'Limpar tudo?');break;
+    case 'copylist':copyText(packList(),'Lista copiada.');break;
+    case 'copybrief':copyText(brief(),'Briefing copiado. Cole numa conversa com busca na web.');break;
+    case 'dljson':dl(slug()+'.json',JSON.stringify(exportObj(),null,2),'application/json');break;
+    case 'dltxt':dl(slug()+'.txt',txtExport(),'text/plain');break;
+    case 'copyjson':copyText(JSON.stringify(exportObj(),null,2),'JSON copiado.');break;
+    case 'impapply':{
+      var r=ui.imp.res;if(!r||!r.ok)break;
+      var o=r.ok,mode=d.mode||'replace';
+      if(mode==='opts'){
+        if(!o.opts)break;
+        applyOpts(o.opts);ui.imp={text:'',res:null};ui.vkey='';ui.tab='goal';
+        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView();
+        window.scrollTo({top:0,behavior:'auto'});
+        toast('Opções do Objetivo importadas. O pack atual foi mantido.');
+        break}
+      arm(el,function(){
+        var inc=$('#impdeps'),ids=o.pack.slice();
+        if(inc&&inc.checked)ids=withAllDeps(ids);
+        if(mode==='add'){S.pack=S.pack.concat(ids.filter(function(i){return S.pack.indexOf(i)<0}))}
+        else{if(o.opts)applyOpts(o.opts);S.pack=ids;if(o.ban)S.ban=o.ban}
+        S.ban=S.ban.filter(function(i){return S.pack.indexOf(i)<0});
+        ui.imp={text:'',res:null};ui.exportText='';ui.vkey='';ui.tab='pack';
+        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView();
+        window.scrollTo({top:0,behavior:'auto'});
+        toast((mode==='add'?'Somados ao pack: ':'Pack importado: ')+ids.length+' mods. Total: '+S.pack.length+'.');
+      },(mode==='replace'&&S.pack.length)?'Substituir pack atual?':null);
+      break}
+    case 'livepack':runLive(S.pack.slice());break;
+    case 'livecat':runLive(MODS.map(function(m){return m.id}));break;
+    case 'livestop':if(ui.live.ctl)ui.live.ctl.abort();break;
+    case 'usever':S.ver=d.id;persist();recompute();renderTop();renderView();break;
+    case 'auto':{
+      var t=recT(),start=d.mode==='complete'?S.pack:[];
+      var run=function(){var ids=autoBuild(t,start);S.pack=ids;commit();
+        toast('Pack montado com '+ids.length+' mods ('+VT[t].id+').');
+        if(ui.tab!=='pack'){ui.tab='pack';renderTabs();renderView()}
+        window.scrollTo({top:0,behavior:'auto'})};
+      if(d.mode==='replace'&&S.pack.length)arm(el,run,'Substituir o pack atual?');else run();
+      break}
+  }
+}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(b)act(b.dataset.act,b.dataset,b)});
+document.addEventListener('input',function(e){
+  var el=e.target;
+  if(el.id==='packName'){S.name=el.value;persist();return}
+  if(el.id==='q'){ui.q=el.value;renderGrid();return}
+  if(el.id==='impText'){impParse(el.value);return}
+  if(el.type==='range'&&el.dataset.k){
+    var k=el.dataset.k,v=+el.value;
+    if(DK[k])S.w[k]=v;else S[k]=v;
+    S.preset='';
+    var o=$('#o_'+k);if(o)o.textContent=v+(k==='size'?' mods':'');
+    var pr=document.querySelectorAll('.pre.on');for(var i=0;i<pr.length;i++)pr[i].classList.remove('on');
+    persist();recompute();renderTop();renderInsight();
+  }
+});
+document.addEventListener('change',function(e){
+  var el=e.target;
+  if(el.id==='impFile'){var f=el.files&&el.files[0];if(f){var fr=new FileReader();fr.onload=function(){var ta=$('#impText');if(ta)ta.value=fr.result;impParse(String(fr.result))};fr.onerror=function(){toast('Não foi possível ler o arquivo.')};fr.readAsText(f)}return}
+  if(el.id==='uselive'){S.useLive=el.checked;persist();applyLive();ui.vkey='';recompute();renderTop();renderTabs();if(ui.tab==='suggest')renderView();return}
+  if(el.id==='fcat'){ui.cat=el.value;renderGrid();return}
+  if(el.id==='fsort'){ui.sort=el.value;renderGrid();return}
+  if(el.id==='fav'){ui.onlyAvail=el.checked;renderGrid();return}
+  if(el.id==='fban'){ui.hideBan=el.checked;renderGrid();return}
+  if(el.dataset&&el.dataset.k==='heap'){S.heap=+el.value;persist();recompute();renderTop();renderInsight();return}
+  if(el.dataset&&el.dataset.k==='ver'){S.ver=el.value;persist();recompute();renderTop();return}
+});
+
+/* ============ INICIAR ============ */
+$('#packName').value=S.name||'Meu modpack';
+applyLive();recompute();renderTop();renderTabs();renderView();
+(function(){try{if(window.claude&&typeof window.claude.use==='function'){window.claude.use('downloads').then(function(d){DL=d}).catch(function(){})}}catch(e){}})();
+})();
+</script>
+</body>
+</html>
