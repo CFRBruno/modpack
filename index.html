@@ -182,6 +182,10 @@ summary{cursor:pointer;font-weight:600}
 .lv-y{color:var(--copper);font-weight:700}
 .lv-n{color:var(--red)}
 .lv-q{color:var(--muted)}
+.ckrow{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 2px;border-bottom:1px dotted var(--line)}
+.ckrow label{display:flex;gap:12px;align-items:center;flex:1;cursor:pointer;min-height:32px}
+.ckrow input[type=checkbox]{width:22px;height:22px;accent-color:var(--xp);flex:none}
+.ckrow.done .ckname{color:var(--muted);text-decoration:line-through}
 .foot{color:var(--muted);font-size:.8rem;margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
 .empty{padding:24px;text-align:center;color:var(--muted);border:2px dashed var(--line)}
 
@@ -408,12 +412,12 @@ M('litematica','Litematica','Construção','Projeções de construção em tela,
 
 /* ============ ESTADO ============ */
 var KEY='forja-modpack-v1';
-var DEF={name:'Meu modpack',w:{ex:6,te:3,ma:2,su:4,co:4,cb:4,vi:6,cr:3,qo:6},vanilla:6,fps:7,nov:5,size:60,heap:4,ver:'auto',pack:[],ban:[],preset:'',useLive:true};
+var DEF={name:'Meu modpack',w:{ex:6,te:3,ma:2,su:4,co:4,cb:4,vi:6,cr:3,qo:6},vanilla:6,fps:7,nov:5,size:60,heap:4,ver:'auto',pack:[],ban:[],preset:'',useLive:true,done:[]};
 function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function persist(){try{S.done=(S.done||[]).filter(function(i){return S.pack.indexOf(i)>=0});localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=(function(){var l=load(),d=clone(DEF);if(l&&typeof l==='object'){for(var k in l){if(k==='w'){for(var x in l.w){d.w[x]=l.w[x]}}else d[k]=l[k]}}
   d.pack=(d.pack||[]).filter(function(i){return BY[i]});d.ban=(d.ban||[]).filter(function(i){return BY[i]});return d})();
-var ui={tab:'goal',q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
+var ui={tab:'goal',q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',ckPend:false,imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
 var cur=null,DL=null;
 
 /* ============ MOTOR DE PONTUAÇÃO ============ */
@@ -664,14 +668,14 @@ function renderTop(){
   $('#stats').innerHTML=h;
 }
 function renderTabs(){
-  var T=[['goal','Objetivo'],['catalog','Catálogo'],['pack','Meu pack'],['suggest','Sugestões'],['files','Exportar e importar']];
+  var T=[['goal','Objetivo'],['catalog','Catálogo'],['pack','Meu pack'],['check','Checklist'],['suggest','Sugestões'],['files','Exportar e importar']];
   $('#tabs').innerHTML=T.map(function(t){
-    return '<button class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-id="'+t[0]+'">'+t[1]+(t[0]==='pack'&&S.pack.length?'<span class="n">'+S.pack.length+'</span>':'')+'</button>';
+    return '<button class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-id="'+t[0]+'">'+t[1]+(t[0]==='pack'&&S.pack.length?'<span class="n">'+S.pack.length+'</span>':'')+(t[0]==='check'&&S.pack.length?'<span class="n">'+S.done.filter(function(i){return S.pack.indexOf(i)>=0}).length+'/'+S.pack.length+'</span>':'')+'</button>';
   }).join('')+'<span style="flex:1"></span><button class="theme" data-act="theme" title="Alternar tema claro/escuro">Tema</button>';
 }
 function renderView(){
   var v=$('#view');
-  var f={goal:vGoal,catalog:vCatalog,pack:vPack,suggest:vSuggest,files:vFiles}[ui.tab];
+  var f={goal:vGoal,catalog:vCatalog,pack:vPack,check:vCheck,suggest:vSuggest,files:vFiles}[ui.tab];
   v.innerHTML=f();
   if(ui.tab==='catalog')renderGrid();
   if(ui.tab==='suggest')afterSuggest();
@@ -871,12 +875,46 @@ function drawVersions(){
   h+='</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn" data-act="usever" data-id="'+r.best+'">Fixar '+VT[r.best].id+'</button><button class="btn ghost" data-act="usever" data-id="auto">Deixar automática</button></div><p class="sub" style="margin-top:10px">Disponibilidade por versão vem de conhecimento até meados de 2026 e de buscas pontuais; confirme no Modrinth antes de baixar. Versões ainda mais novas que a 26.2 podem existir.</p>';
   box.innerHTML=h;
 }
+function mrLink(m){
+  var L=LIVE.mods[m.id];
+  if(L&&L.found&&L.slug)return 'https://modrinth.com/mod/'+encodeURIComponent(L.slug)+'/versions?g='+encodeURIComponent(cur.v.vq)+'&l=fabric';
+  return mrUrl(m);
+}
+function vCheck(){
+  var n=S.pack.length,h='<h2>Checklist do launcher</h2>';
+  if(!n)return h+'<div class="empty" style="margin-top:14px"><p><b>Nenhum mod no pack.</b></p><p>Monte o pack no Catálogo ou importe uma lista, e volte aqui para marcar cada mod conforme for adicionando ao launcher.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn" data-act="tab" data-id="catalog">Abrir catálogo</button><button class="btn ghost" data-act="tab" data-id="files">Importar lista</button></div></div>';
+  var dn=S.done.filter(function(i){return S.pack.indexOf(i)>=0}).length,pct=Math.round(dn/n*100);
+  h+='<p class="lead">Marque cada mod depois de colocá-lo no launcher. O progresso fica salvo e acompanha o pack: mods novos entram como pendentes e os removidos saem da lista.</p>';
+  h+='<section class="block"><div class="row" style="justify-content:space-between"><b style="font:700 1.4rem var(--head)">'+dn+' de '+n+' adicionados</b><span class="sub" style="margin:0">'+pct+'% · Minecraft '+esc(cur.v.id)+' · Fabric</span></div>'
+   +'<div class="xpbar" style="max-width:none;margin:10px 0"><div class="fill" style="width:'+pct+'%"></div><div class="segs"></div></div>';
+  if(dn===n)h+='<div class="issue info"><div class="t"><b>Tudo adicionado.</b> Abra o jogo e confira se carrega sem erros. O spark ajuda a medir RAM e TPS.</div></div>';
+  h+='<div class="row"><label style="display:flex;gap:6px;align-items:center;font-size:.92rem"><input type="checkbox" id="ckpend"'+(ui.ckPend?' checked':'')+'> Mostrar só os pendentes</label><span style="flex:1"></span><button class="btn danger sm" data-act="ckclear">Zerar marcações</button></div></section>';
+  var shown=0;
+  CATS.forEach(function(c){
+    var all=S.pack.map(function(i){return BY[i]}).filter(function(m){return m.cat===c});
+    if(!all.length)return;
+    var d=all.filter(function(m){return S.done.indexOf(m.id)>=0}).length;
+    var list=ui.ckPend?all.filter(function(m){return S.done.indexOf(m.id)<0}):all;
+    if(!list.length)return;
+    shown+=list.length;
+    h+='<section class="block"><div class="row" style="justify-content:space-between"><h3>'+esc(c)+' <span class="sub" style="font-weight:500">'+d+' de '+all.length+'</span></h3><span class="row"><button class="btn ghost sm" data-act="ckcat" data-cat="'+esc(c)+'" data-on="1">Marcar todos</button><button class="btn ghost sm" data-act="ckcat" data-cat="'+esc(c)+'" data-on="0">Desmarcar</button></span></div>';
+    list.forEach(function(m){
+      var ck=S.done.indexOf(m.id)>=0,tag='';
+      if(m.lib)tag='<span class="tag">biblioteca</span> ';
+      if(m.id==='shaders')tag='<span class="tag">escolha um pacote na categoria Shaders do Modrinth</span> ';
+      h+='<div class="ckrow'+(ck?' done':'')+'"><label><input type="checkbox" data-ck="'+m.id+'"'+(ck?' checked':'')+' aria-label="'+esc(m.name)+'"><span class="ckname">'+esc(m.name)+'</span> '+tag+'</label><a class="vlink" href="'+(m.id==='shaders'?'https://modrinth.com/shaders':mrLink(m))+'" target="_blank" rel="noopener">página no Modrinth</a></div>';
+    });
+    h+='</section>';
+  });
+  if(!shown)h+='<div class="empty">Nada pendente. Todos os mods do pack já foram marcados.</div>';
+  return h;
+}
 function slug(){return (S.name||'modpack').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\-]+/g,'_').replace(/^_+|_+$/g,'')||'modpack'}
 function exportObj(){
   var c=cur,cr={};for(var k in c.crit)cr[k]=Math.round(c.crit[k]);
   return {app:'forja-de-modpack',versao:1,exportadoEm:new Date().toISOString(),nome:S.name,quantidade:S.pack.length,
     objetivo:{areas:clone(S.w),fidelidadeVanilla:S.vanilla,prioridadeDesempenho:S.fps,vontadeVersaoNova:S.nov,tamanhoAlvo:S.size,ramGB:S.heap,versao:S.ver,perfil:S.preset||''},
-    mods:S.pack.slice(),descartados:S.ban.slice(),
+    mods:S.pack.slice(),descartados:S.ban.slice(),marcados:S.done.slice(),
     resumo:{nota:Math.round(c.total),porCategoria:catCounts(),minecraft:c.v.id,java:c.v.java,ramEstimadaMB:Math.round(c.ram),criterios:cr,modsPorNome:S.pack.map(function(i){return BY[i].name})}};
 }
 function txtExport(){
@@ -915,7 +953,7 @@ function parseImport(text){
   var pk=known(o.mods),bn=known(o.descartados),listed=Array.isArray(o.mods)?o.mods.length:0,warns=[];
   var declared=typeof o.quantidade==='number'?o.quantidade:null;
   if(declared!==null&&declared!==listed)warns.push('O arquivo declara '+declared+' mods, mas a lista tem '+listed+'.');
-  return {kind:'json',ok:{pack:pk.k,ban:bn.k.filter(function(i){return pk.k.indexOf(i)<0}),
+  return {kind:'json',ok:{pack:pk.k,done:known(o.marcados).k.filter(function(i){return pk.k.indexOf(i)>=0}),ban:bn.k.filter(function(i){return pk.k.indexOf(i)<0}),
     opts:{name:String(o.nome||'Meu modpack').slice(0,40),w:w,vanilla:num(ob.fidelidadeVanilla,0,10,DEF.vanilla),fps:num(ob.prioridadeDesempenho,0,10,DEF.fps),nov:num(ob.vontadeVersaoNova,0,10,DEF.nov),size:num(ob.tamanhoAlvo,15,200,DEF.size),
       heap:[2,3,4,6,8].indexOf(ob.ramGB)>=0?ob.ramGB:4,ver:(ob.versao==='auto'||VT[ob.versao])?ob.versao:'auto',preset:typeof ob.perfil==='string'?ob.perfil:''}},
     unk:pk.u.concat(bn.u),dupes:Math.max(0,listed-pk.k.length-pk.u.length),declared:declared,listed:listed,warns:warns,onlyOpts:(listed===0&&!!o.objetivo),nota:o.resumo&&o.resumo.nota,data:o.exportadoEm};
@@ -978,6 +1016,7 @@ function renderImpPrev(){
     if(r.dupes)sum+=' · '+r.dupes+' repetido(s) ignorado(s)';
     if(o.opts&&o.opts.name)sum+=' · pack “'+esc(o.opts.name)+'”';
     if(typeof r.nota==='number')sum+=' · nota exportada '+r.nota+'/100';
+    if(o.done&&o.done.length)sum+=' · checklist: '+o.done.length+' marcado(s)';
     if(d&&!isNaN(d))sum+=' · exportado em '+d.toLocaleDateString('pt-BR');
     sum+=o.opts?' · inclui as opções do Objetivo':' · só a lista de mods (suas opções atuais ficam como estão)';
   }
@@ -1004,7 +1043,7 @@ function applyOpts(o){
 function vFiles(){
   var cc=catCounts(),sum=S.pack.length?CATS.filter(function(c){return cc[c]}).map(function(c){return c+' '+cc[c]}).join(' · '):'vazio';
   var h='<h2>Exportar e importar</h2><p class="lead">Salve o pack com todas as opções do Objetivo e retome depois, nesta ou em outra máquina. O pack também fica guardado automaticamente neste navegador.</p>';
-  h+='<section class="block"><h3>Exportar</h3><p class="sub"><b>Pack atual: '+S.pack.length+' mods</b> ('+esc(sum)+'). O .json guarda tudo (objetivo, RAM, versão, mods, descartados e a quantidade). O .txt traz as opções do Objetivo e a lista por categoria, com a quantidade de mods, e também pode ser importado de volta.</p>'
+  h+='<section class="block"><h3>Exportar</h3><p class="sub"><b>Pack atual: '+S.pack.length+' mods</b> ('+esc(sum)+'). O .json guarda tudo (objetivo, RAM, versão, mods, descartados, quantidade e o progresso do checklist). O .txt traz as opções do Objetivo e a lista por categoria, com a quantidade de mods, e também pode ser importado de volta.</p>'
    +'<div class="row"><button class="btn" data-act="dljson">Baixar pack (.json)</button><button class="btn ghost" data-act="dltxt">Baixar lista (.txt)</button><button class="btn ghost" data-act="copyjson">Copiar JSON</button><button class="btn ghost" data-act="copylist">Copiar lista</button></div>';
   if(ui.exportText)h+='<textarea id="exportBox" class="exp" readonly style="margin-top:12px">'+esc(ui.exportText)+'</textarea>';
   h+='</section><section class="block"><h3>Importar</h3><p class="sub">Aceita o .json ou uma lista .txt. Os mods são reconhecidos pelo nome, sem diferenciar maiúsculas, acentos ou apóstrofos. A quantidade, quando está no arquivo, serve de conferência. Também dá para importar só as opções do Objetivo, mantendo o pack atual. Nada é alterado até você aplicar.</p>'
@@ -1169,7 +1208,7 @@ function act(a,d,el){
         var inc=$('#impdeps'),ids=o.pack.slice();
         if(inc&&inc.checked)ids=withAllDeps(ids);
         if(mode==='add'){S.pack=S.pack.concat(ids.filter(function(i){return S.pack.indexOf(i)<0}))}
-        else{if(o.opts)applyOpts(o.opts);S.pack=ids;if(o.ban)S.ban=o.ban}
+        else{if(o.opts)applyOpts(o.opts);S.pack=ids;if(o.ban)S.ban=o.ban;if(r.kind==='json')S.done=o.done||[]}
         S.ban=S.ban.filter(function(i){return S.pack.indexOf(i)<0});
         ui.imp={text:'',res:null};ui.exportText='';ui.vkey='';ui.tab='pack';
         $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView();
@@ -1180,6 +1219,11 @@ function act(a,d,el){
     case 'livepack':runLive(S.pack.slice());break;
     case 'livecat':runLive(MODS.map(function(m){return m.id}));break;
     case 'livestop':if(ui.live.ctl)ui.live.ctl.abort();break;
+    case 'ckcat':{
+      var on=d.on==='1',cids=S.pack.filter(function(i){return BY[i].cat===d.cat});
+      cids.forEach(function(i){var k=S.done.indexOf(i);if(on&&k<0)S.done.push(i);else if(!on&&k>=0)S.done.splice(k,1)});
+      persist();renderTabs();var y1=window.scrollY||0;renderView();window.scrollTo(0,y1);break}
+    case 'ckclear':arm(el,function(){S.done=[];persist();renderTabs();renderView()},'Zerar tudo?');break;
     case 'usever':S.ver=d.id;persist();recompute();renderTop();renderView();break;
     case 'auto':{
       var t=recT(),start=d.mode==='complete'?S.pack:[];
@@ -1209,6 +1253,11 @@ document.addEventListener('input',function(e){
 document.addEventListener('change',function(e){
   var el=e.target;
   if(el.id==='impFile'){var f=el.files&&el.files[0];if(f){var fr=new FileReader();fr.onload=function(){var ta=$('#impText');if(ta)ta.value=fr.result;impParse(String(fr.result))};fr.onerror=function(){toast('Não foi possível ler o arquivo.')};fr.readAsText(f)}return}
+  if(el.dataset&&el.dataset.ck){
+    var cid=el.dataset.ck,ci=S.done.indexOf(cid);
+    if(el.checked&&ci<0)S.done.push(cid);else if(!el.checked&&ci>=0)S.done.splice(ci,1);
+    persist();renderTabs();var y2=window.scrollY||0;renderView();window.scrollTo(0,y2);return}
+  if(el.id==='ckpend'){ui.ckPend=el.checked;var y3=window.scrollY||0;renderView();window.scrollTo(0,y3);return}
   if(el.id==='uselive'){S.useLive=el.checked;persist();applyLive();ui.vkey='';recompute();renderTop();renderTabs();if(ui.tab==='suggest')renderView();return}
   if(el.id==='fcat'){ui.cat=el.value;renderGrid();return}
   if(el.id==='fsort'){ui.sort=el.value;renderGrid();return}
