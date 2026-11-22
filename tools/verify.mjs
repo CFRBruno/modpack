@@ -108,7 +108,9 @@ function analyse(vs){
     if(v)tierDeps[T.t]=(v.dependencies||[]).filter(d=>d.dependency_type==='required'&&d.project_id).map(d=>d.project_id);
   }
   const deps=[...new Set(Object.values(tierDeps).flat())];
-  return {ver,aOnly,latest:latest?latest.slice(0,10):'',deps,tierDeps};
+  const tu={};
+  for(const T of TIERS){const v=sorted.find(x=>x.version_type!=='alpha'&&(x.game_versions||[]).some(T.match));if(v){const d=String(v.date_published);tu[T.t]=+(d.slice(2,4)+d.slice(5,7))}}
+  return {ver,aOnly,latest:latest?latest.slice(0,10):'',deps,tierDeps,tu};
 }
 
 const byPid={},report={unmatched:[],fuzzy:[],noFabricTier:[],stale:[],alpha:[]};
@@ -122,7 +124,7 @@ async function resolve(r){
   if(m.sc<3)report.fuzzy.push(r.id+' → '+m.h.title);
   r.pid=m.h.project_id;r.slug=m.h.slug;r.dl=m.h.downloads;r.title=m.h.title;
   const vs=await loadVersions(r.pid),a=analyse(vs);
-  r.ver=a.ver;r.upd=a.latest;r.apiDeps=a.deps;r.tierDeps=a.tierDeps;
+  r.ver=a.ver;r.upd=a.latest;r.apiDeps=a.deps;r.tierDeps=a.tierDeps;r.tu=a.tu;
   if(a.aOnly)report.alpha.push(r.id+': só alpha em '+a.aOnly);
   if(!a.ver)report.noFabricTier.push(r.id);
   byPid[r.pid]=r;
@@ -142,7 +144,7 @@ while(pending&&guard++<4){
     if(pr.project_type!=='mod'){byPid[p]={skip:1};continue}
     const id=pr.slug.replace(/[^a-z0-9-]/g,'');
     const r={id,name:pr.title,cat:'Bibliotecas',sub:'Núcleo',desc:'',aff:'',ram:8,cpu:0,inv:0,ver0:'',opts:{lib:1},isNew:true,auto:true,pid:p,slug:pr.slug,dl:pr.downloads,title:pr.title};
-    const vs=await loadVersions(p),a=analyse(vs);r.ver=a.ver;r.upd=a.latest;r.apiDeps=a.deps;r.tierDeps=a.tierDeps;
+    const vs=await loadVersions(p),a=analyse(vs);r.ver=a.ver;r.upd=a.latest;r.apiDeps=a.deps;r.tierDeps=a.tierDeps;r.tu=a.tu;
     byPid[p]=r;extra.push(r);pending=true;
     process.stdout.write('+');
   }
@@ -197,6 +199,7 @@ const out=final.map(r=>{
   for(const k of ['core','fragile','lib','gpu','heavy'])if(r.opts[k])o[k]=1;
   if(r.opts.note)o.note=r.opts.note;if(r.opts.grp)o.grp=r.opts.grp;if(r.opts.con&&r.opts.con.length)o.con=r.opts.con;
   if(r.slug)o.slug=r.slug;if(r.dl)o.dl=r.dl;if(r.upd)o.upd=r.upd;
+  if(r.tu&&Object.keys(r.tu).length)o.tu=r.tu;
   return JSON.stringify(o);
 });
 const stamp=new Date().toISOString().slice(0,10);

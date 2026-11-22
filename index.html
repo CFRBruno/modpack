@@ -189,6 +189,14 @@ summary{cursor:pointer;font-weight:600}
 .foot{color:var(--muted);font-size:.8rem;margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
 .empty{padding:24px;text-align:center;color:var(--muted);border:2px dashed var(--line)}
 
+
+.tag.good{border-color:var(--copper);color:var(--copper)}
+.issue.step{align-items:center}
+.stepn{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;background:var(--lapis);color:#fff;font:700 .95rem var(--head);border-radius:3px;box-shadow:0 2px 0 #0003}
+.gaprow{padding:10px 0 4px;border-bottom:1px solid var(--line)}
+.gaprow:last-child{border-bottom:0}
+.gaph{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.swap{color:var(--lapis);font-weight:700}
 @media (max-width:860px){
   .top .wrap{grid-template-columns:1fr;gap:8px}
   .chips{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
@@ -291,7 +299,7 @@ var MODS=[],BY={};
     var a={};(o.aff||'').split(' ').filter(Boolean).forEach(function(x){a[x.slice(0,2)]=+x.slice(2)});
     var m={id:o.id,name:o.name,cat:o.cat,sub:o.sub||'',desc:o.desc,a:a,ram:o.ram,cpu:o.cpu,inv:o.inv,ver:o.ver,
       dep:o.dep||[],dt:o.dt||null,grp:o.grp||null,core:!!o.core,fragile:!!o.fragile,lib:!!o.lib,gpu:!!o.gpu,heavy:!!o.heavy,
-      note:o.note||'',con:(o.con||[]).slice(),slug:o.slug||'',dl:o.dl||0,upd:o.upd||''};
+      note:o.note||'',con:(o.con||[]).slice(),slug:o.slug||'',dl:o.dl||0,upd:o.upd||'',tu:o.tu||null};
     MODS.push(m);BY[m.id]=m;
   });
   /* conflitos valem nos dois sentidos */
@@ -308,10 +316,68 @@ function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}
 function persist(){try{S.done=(S.done||[]).filter(function(i){return S.pack.indexOf(i)>=0});localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=(function(){var l=load(),d=clone(DEF);if(l&&typeof l==='object'){for(var k in l){if(k==='w'){for(var x in l.w){d.w[x]=l.w[x]}}else d[k]=l[k]}}
   d.pack=(d.pack||[]).filter(function(i){return BY[i]});d.ban=(d.ban||[]).filter(function(i){return BY[i]});return d})();
-var ui={tab:'goal',q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',ckPend:false,imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
+var ui={tab:'goal',sugSort:'gain',sugTok:0,q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',ckPend:false,imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
 var cur=null,DL=null;
 
 /* ============ MOTOR DE PONTUAÇÃO ============ */
+/* critérios, pesos e regras do motor */
+var CK=['al','fo','pf','es','sc','fu','sy'];
+var CN={al:'Alinhamento ao objetivo',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos',sy:'Sinergia e coesão'};
+var CS={al:'Alinhamento',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos',sy:'Sinergia'};
+function critWeights(){
+  var pf=0.12+0.02*S.fps,sc=(1-pf)/0.80;
+  return {al:0.30*sc,fo:0.12*sc,pf:pf,es:0.15*sc,sc:0.08*sc,fu:0.07*sc,sy:0.08*sc};
+}
+/* peso de cada mod na GPU (pontos); o catálogo só marca RAM e CPU */
+var GPUW={shaders:6,distanthorizons:4,voxy:2.5,immersiveportals:4,physicsmod:1.5,lambdynlights:0.3,sodiumdynamiclights:0.3};
+/* grupos que um pack decente deveria ter, conforme o tamanho ou o objetivo */
+var GRNEED={recipes:{w:1.5,minN:12,label:'visualizador de receitas (EMI, JEI ou REI)'},tooltip:{w:0.7,minN:15,label:'informação ao mirar (Jade ou WTHIT)'},minimap:{w:1,dim:'ex',minW:5,label:'minimapa (Xaero’s ou JourneyMap)'}};
+/* combinações que se reforçam: cada membro além do primeiro soma w */
+var COMBOS=[
+ {n:'Relevo e biomas',m:['terralith','tectonic','lithostitched'],w:1.5},
+ {n:'Shaders completos',m:['sodium','iris','shaders'],w:1},
+ {n:'Mapa Xaero',m:['xaerominimap','xaeroworldmap'],w:1},
+ {n:'Ferrovia e indústria Create',m:['create','createrails','createdeco'],w:1},
+ {n:'Cozinha Delight',m:['farmersdelight','brewinandchewin','endsdelight','moredelight','oceansdelight'],w:0.8},
+ {n:'Ecossistema Cobblemon',m:['cobblemon','cobbledollars','fightorflight','cobblecuisine','raiddens','cobblefurnies','cobblemonrideon','cobbreeding','megashowdown','radicaltrainers','legendarymonuments'],w:0.8},
+ {n:'Classes RPG',m:['bettercombat','wizards','paladins','archers','rogues','spellblades','combatroll','jewelry','runes'],w:1},
+ {n:'Estruturas YUNG',m:['bdungeons','bmineshafts','bstrongholds','bdeserttemples','boceanmonuments','bjungletemples','bwitchhuts','bnetherfortresses','yungsbridges','yungscavebiomes'],w:0.4},
+ {n:'Variedade de estruturas',m:['repurposed','dungeonstaverns','structory','towns','moogsvoyager','towersofthewild','whendungeonsarise','philipsruins'],w:0.5},
+ {n:'Exploração guiada',m:['naturescompass','explorerscompass','waystones','wraithwaystones','antiqueatlas'],w:0.7},
+ {n:'Receitas completas',m:['emi','emiloot','emiores','emienchanting'],w:0.6},
+ {n:'Pacote Masa',m:['litematica','tweakeroo','minihud','itemscroller'],w:0.8},
+ {n:'Clima e sobrevivência',m:['dehydration','fabricseasons','fabricseasonsextras','frostiful','nutrition','universalgraves'],w:0.8},
+ {n:'Decoração coesa',m:['handcrafted','supplementaries','chipped','amendments','decorativeblocks','anotherfurniture','macawfurniture'],w:0.4},
+ {n:'Magia programável',m:['hexcasting','hexical'],w:1},
+ {n:'Imersão sonora',m:['presencefootsteps','soundphysics','ambientsounds','subtleeffects'],w:0.7},
+ {n:'Visual vivo',m:['fallingleaves','visuality','particular','particlerain','immersiveweathering','enhancedvisuals'],w:0.4},
+ {n:'Animação do jogador',m:['nea','eatinganimation','emotecraft','firstpersonmodel','tinyitemanimations','smoothswapping','etf','emf'],w:0.4},
+ {n:'Dungeons e chefes',m:['bdungeons','deeperanddarker','bomd','aquamirae','whendungeonsarise','eeeabsmobs','adventurez','mutantmonsters','illagerinvasion','trueending'],w:0.5},
+ {n:'Armazenamento organizado',m:['sophisticatedbackpacks','sophisticatedstorage','storagedrawers','tomssimple'],w:0.8},
+ {n:'Voo com elytra',m:['elytraslot','barrelroll','icarus'],w:0.6},
+ {n:'Inventário afiado',m:['ipn','mousetweaks','mousewheelie','craftingtweaks','shulkertooltip'],w:0.4},
+ {n:'Informação na tela',m:['jade','appleskin','betterf3','enchdesc','lightoverlay'],w:0.4},
+ {n:'Fauna e mundo vivo',m:['naturalist','species','friendsfoes','ecologics','crittersandcompanions','ribbits','mobvariants'],w:0.5}
+];
+/* famílias que competem pelo mesmo espaço: acima de “free” membros há sobreposição */
+var FAMS=[
+ {n:'indústria',m:['create','techreborn','modernindustrialization','oritech'],free:1,p:1},
+ {n:'overhauls de bioma',m:['terralith','wwoo','biomesoplenty','regionsunexplored','ohthebiomeswevegone','promenade','biomemakeover','stellarity','naturesspirit','wilderwild','terrestria'],free:2,p:1},
+ {n:'redes de armazenamento',m:['ae2','refinedstorage','storagedrawers','tomssimple'],free:1,p:1},
+ {n:'mochilas',m:['sophisticatedbackpacks','travelersbackpack','inventorio','netherchested'],free:1,p:0.7},
+ {n:'armas e armaduras',m:['simplyswords','mythicmetals','advancednetherite','immersivearmors','mythicupgrades'],free:2,p:0.8},
+ {n:'culinária',m:['farmersdelight','kaleidoscope','farmcharm','vinery','candlelight','bakery'],free:3,p:0.6}
+];
+var NOWM=(function(){var d=new Date((window.FORJA_DATA&&window.FORJA_DATA.generated)||Date.now());if(isNaN(d))d=new Date();return d.getFullYear()*12+d.getMonth()})();
+/* meses desde a última build não-alpha que serve a essa versão do Minecraft */
+function staleM(m,t){var u=m.tu&&m.tu[t];if(!u)return 0;return Math.max(0,NOWM-((2000+Math.floor(u/100))*12+(u%100)-1))}
+var CORET={},ESST={};
+function coreFor(t){return CORET[t]||(CORET[t]=MODS.filter(function(m){return m.core&&m.ver.indexOf(t)>=0}))}
+function essFor(t){
+  if(ESST[t])return ESST[t];
+  var o={};for(var g in GRNEED){o[g]=MODS.filter(function(m){return m.grp===g&&m.ver.indexOf(t)>=0}).sort(function(a,b){return b.dl-a.dl})}
+  return ESST[t]=o;
+}
 function modFit(m){
   var ks=Object.keys(m.a);if(!ks.length)return null;
   var tot=0,s=0,mx=0;
@@ -321,24 +387,19 @@ function modFit(m){
   f-=(S.vanilla/10)*(m.inv/3)*0.25;
   return clamp(f,0,1);
 }
-function critWeights(){
-  var pf=0.12+0.02*S.fps;
-  var sc=(1-pf)/0.80;
-  return {al:0.34*sc,fo:0.14*sc,pf:pf,es:0.16*sc,sc:0.10*sc,fu:0.06*sc};
-}
 function score(ids,t,lite){
   var set={},mods=[];
   ids.forEach(function(i){var m=BY[i];if(m&&!set[i]){set[i]=1;mods.push(m)}});
   var n=mods.length,V=VT[t],H=S.heap*1024;
   var used={};mods.forEach(function(m){depsOf(m,t).forEach(function(d){used[d]=1})});
   var orph=mods.filter(function(m){return m.lib&&m.id!=='fabric-api'&&!used[m.id]});
-  var r={n:n,t:t,v:V,issues:[],crit:{al:0,fo:0,pf:0,es:0,sc:0,fu:0},notes:{al:[],fo:[],pf:[],es:[],sc:[],fu:[]},Pd:{},total:0,ram:1300,load:0,heap:H,ratio:1300/H,empty:n===0};
+  var r={n:n,t:t,v:V,issues:[],crit:{al:0,fo:0,pf:0,es:0,sc:0,fu:0,sy:0},notes:{al:[],fo:[],pf:[],es:[],sc:[],fu:[],sy:[]},Pd:{},total:0,ram:1300,load:0,gpu:0,heap:H,ratio:1300/H,empty:n===0,combos:[],missEss:[]};
   DIMS.forEach(function(d){r.Pd[d.k]=0});
   if(!n){if(!lite)r.notes.al.push('Pack vazio.');return r}
   mods.forEach(function(m){if(orph.indexOf(m)>=0)return;for(var k in m.a)r.Pd[k]+=m.a[k]});
   var W=S.w,wsum=0;DIMS.forEach(function(d){wsum+=W[d.k]});wsum=wsum||1;
   var SAT=clamp(S.size/9,4,20);r.SAT=SAT;
-  /* Alinhamento */
+  /* ---- Alinhamento ---- */
   var cov=0,dot=0,np=0,nw=0;
   DIMS.forEach(function(d){var k=d.k,T=(W[k]/10)*SAT;cov+=W[k]*(T>0?Math.min(1,r.Pd[k]/T):1);dot+=r.Pd[k]*W[k];np+=r.Pd[k]*r.Pd[k];nw+=W[k]*W[k]});
   cov/=wsum;var cs=(np&&nw)?dot/(Math.sqrt(np)*Math.sqrt(nw)):0;
@@ -350,10 +411,11 @@ function score(ids,t,lite){
   r.cov=cov;r.invAvg=invAvg;r.invTgt=tgt;
   if(!lite)r.notes.al.push('Cobertura do que você pediu: '+Math.round(cov*100)+'%.');
   var lacks=DIMS.filter(function(d){return W[d.k]>=6&&r.Pd[d.k]<(W[d.k]/10)*SAT*0.5}).map(function(d){return d.n});
+  r.lacks=DIMS.filter(function(d){return W[d.k]>=5&&r.Pd[d.k]<(W[d.k]/10)*SAT*0.75}).map(function(d){return d.k});
   if(!lite&&lacks.length)r.notes.al.push('Pouco conteúdo em: '+lacks.join(', ')+'.');
   var diff=invAvg-tgt;
   if(!lite&&content.length&&Math.abs(diff)>0.6)r.notes.al.push(diff>0?'O pack altera o vanilla mais do que você quer (mods de conteúdo muito invasivos).':'O pack é mais “vanilla” do que você pediu; há espaço para mods mais transformadores.');
-  /* Foco */
+  /* ---- Foco ---- */
   var S2=DIMS.filter(function(d){return W[d.k]>=5}).map(function(d){return d.k});
   if(!S2.length){S2=DIMS.slice().sort(function(a,b){return W[b.k]-W[a.k]}).slice(0,2).map(function(d){return d.k})}
   var mt=0,mi=0;DIMS.forEach(function(d){mt+=r.Pd[d.k];if(S2.indexOf(d.k)>=0)mi+=r.Pd[d.k]});
@@ -368,22 +430,24 @@ function score(ids,t,lite){
   if(!lite&&offs.length)r.notes.fo.push(offs.length+' mod(s) fora do objetivo: '+offs.slice(0,4).map(function(m){return m.name}).join(', ')+(offs.length>4?'…':'')+'.');
   if(!lite&&disp.length)r.notes.fo.push('Dispersão: conteúdo relevante em áreas que você não quer (' +disp.map(function(d){return d.n}).join(', ')+').');
   r.offs=offs;
-  /* Desempenho */
-  var ram=1300,load=0;mods.forEach(function(m){ram+=m.ram;load+=m.cpu});
-  r.ram=ram;r.load=load;r.ratio=ram/H;
-  var rs=clamp((1-r.ratio)/0.45,0,1),cs2=clamp((40-load)/32,0,1);
-  r.crit.pf=100*(0.6*rs+0.4*cs2);
+  /* ---- Desempenho: RAM não linear, CPU e GPU ---- */
+  var ram=1300,load=0,gpu=0;mods.forEach(function(m){ram+=m.ram;load+=m.cpu;if(GPUW[m.id])gpu+=GPUW[m.id]});
+  r.ram=ram;r.load=load;r.gpu=gpu;r.ratio=ram/H;
+  var q=r.ratio,rs=q<=0.55?1:q<=0.85?1-(q-0.55)/0.30*0.65:q<=1?0.35-(q-0.85)/0.15*0.35:0;
+  var cs2=clamp((40-load)/32,0,1),gs=clamp(1-gpu/14,0,1);
+  r.crit.pf=100*(0.55*rs+0.30*cs2+0.15*gs);
+  r.startup=Math.round(18+0.45*n+Math.max(0,ram-1300)/110);
   if(!lite)r.notes.pf.push('RAM estimada: ~'+fmt(ram,0)+' MB de '+fmt(H,0)+' MB ('+Math.round(r.ratio*100)+'%). Confortável até ~55%; acima de 85% há risco de travadas e crash.');
-  if(!lite)r.notes.pf.push('Carga de CPU estimada: '+fmt(load,1)+' pts (menor é melhor; acima de ~25 pesa).');
-  var gp=mods.filter(function(m){return m.gpu});
-  if(!lite&&gp.length)r.notes.pf.push('Shaders pesam principalmente na GPU: confirme o FPS com a sua placa.');
+  if(!lite)r.notes.pf.push('Carga de CPU estimada: '+fmt(load,1)+' pts (menor é melhor; acima de ~25 pesa). GPU: '+fmt(gpu,1)+' pts'+(gpu>=8?' (alta: confirme o FPS com a sua placa)':'')+'.');
+  if(!lite)r.notes.pf.push('Tempo de abertura estimado: ~'+r.startup+' s (varia muito com o PC e o disco).');
   var hv=mods.filter(function(m){return m.heavy});
   if(!lite&&hv.length&&H<=4096)r.notes.pf.push('Mods pesados com pouca RAM: '+hv.map(function(m){return m.name}).join(', ')+'.');
-  /* Estabilidade */
-  var est=100,missing={},unavail=[],conf=[],groups={},frag=[];
+  /* ---- Estabilidade ---- */
+  var est=100,missing={},unavail=[],conf=[],groups={},frag=[],stale=[],old=[];
   mods.forEach(function(m){
     depsOf(m,t).forEach(function(d){if(!set[d]){(missing[d]=missing[d]||[]).push(m)}});
     if(m.ver.indexOf(t)<0)unavail.push(m);
+    else{var sm=staleM(m,t);if(sm>30)stale.push(m);else if(sm>18)old.push(m)}
     m.con.forEach(function(c){if(set[c]&&m.id<c)conf.push([m,BY[c]])});
     if(m.grp)(groups[m.grp]=groups[m.grp]||[]).push(m);
     if(m.fragile)frag.push(m);
@@ -393,19 +457,21 @@ function score(ids,t,lite){
   var gk=Object.keys(groups).filter(function(g){return groups[g].length>1});
   gk.forEach(function(g){est-=10*(groups[g].length-1)});
   est-=Math.min(12,3*frag.length);est-=4*orph.length;
+  est-=Math.min(12,1.5*stale.length)+Math.min(4,0.5*old.length);
   r.crit.es=clamp(est,0,100);
-  if(!lite)conf.forEach(function(c){r.issues.push({sev:'err',text:'<b>'+esc(c[0].name)+'</b> conflita com <b>'+esc(c[1].name)+'</b> (os dois reescrevem a mesma parte do jogo).',fix:{act:'rm',id:c[1].id,label:'Remover '+c[1].name}})});
+  if(!lite)conf.forEach(function(c){r.issues.push({sev:'err',text:'<b>'+esc(c[0].name)+'</b> conflita com <b>'+esc(c[1].name)+'</b> (os dois mexem na mesma parte do jogo).',fix:{act:'rm',id:c[1].id,label:'Remover '+c[1].name}})});
   if(!lite)md.forEach(function(d){var dm=BY[d];r.issues.push({sev:'err',text:'<b>'+esc(missing[d].map(function(m){return m.name}).slice(0,3).join(', '))+(missing[d].length>3?'…':'')+'</b> precisa(m) de <b>'+esc(dm?dm.name:d)+'</b>.',fix:{act:'add',id:d,label:'Adicionar'}})});
   if(!lite)unavail.forEach(function(m){r.issues.push({sev:'warn',text:'<b>'+esc(m.name)+'</b> não tem build conhecida para '+V.id+'.',fix:{act:'rm',id:m.id,label:'Remover'}})});
   if(!lite)gk.forEach(function(g){r.issues.push({sev:'warn',text:'Redundância ('+GR[g]+'): '+groups[g].map(function(m){return '<b>'+esc(m.name)+'</b>'}).join(' + ')+'. Mantenha só um.'})});
+  if(!lite&&stale.length)r.issues.push({sev:'info',text:'Sem atualização para '+V.id+' há mais de 2,5 anos: '+stale.slice(0,5).map(function(m){return '<b>'+esc(m.name)+'</b>'}).join(', ')+(stale.length>5?'…':'')+'. Funcionam, mas não esperam correções.'});
   if(!lite)frag.forEach(function(m){r.issues.push({sev:'info',text:'<b>'+esc(m.name)+'</b>: '+esc(m.note||'experimental')})});
-  /* libs órfãs */
   if(!lite)orph.forEach(function(m){r.issues.push({sev:'info',text:'<b>'+esc(m.name)+'</b> não é usada por nenhum mod do pack.',fix:{act:'rm',id:m.id,label:'Remover'}})});
   if(!lite){if(r.ratio>1)r.issues.unshift({sev:'err',text:'RAM estimada acima do heap: o jogo deve travar ou falhar ao carregar.'});}
   else if(r.ratio>0.85)r.issues.unshift({sev:'warn',text:'RAM estimada acima de 85% do heap: sem folga para exploração e chunks.'});
-  if(!lite)r.notes.es.push(conf.length+' conflito(s) direto(s), '+md.length+' dependência(s) faltando, '+gk.length+' redundância(s), '+unavail.length+' mod(s) sem build conhecida em '+V.id+'.');
-  r.conf=conf.length;r.miss=md.length;r.unav=unavail.length;
-  /* Escopo */
+  if(!lite)r.notes.es.push(conf.length+' conflito(s) direto(s), '+md.length+' dependência(s) faltando, '+gk.length+' redundância(s), '+unavail.length+' mod(s) sem build em '+V.id+'.');
+  if(!lite)r.notes.es.push(stale.length+' mod(s) sem atualização há mais de 30 meses e '+old.length+' entre 18 e 30 meses (para '+V.id+').');
+  r.conf=conf.length;r.miss=md.length;r.unav=unavail.length;r.stale=stale.length;
+  /* ---- Escopo ---- */
   var N=S.size,ne=Math.max(1,n-orph.length),sz=1-clamp(Math.abs(Math.log(ne/N))/Math.log(4),0,1);
   var oh=content.filter(function(m){return m.inv>=3}).length,allowed=(S.vanilla<=4?3:2)+(N>100?1:0);
   var s4=1-clamp(0.15*Math.max(0,oh-allowed),0,0.6);
@@ -413,16 +479,48 @@ function score(ids,t,lite){
   if(!lite)r.notes.sc.push(n+' mods no pack (meta: '+N+'). '+(n<N*0.7?'Ainda abaixo da meta.':n>N*1.4?'Acima da meta: considere cortar.':'Dentro da faixa.'));
   if(!lite)r.notes.sc.push(oh+' mod(s) de conteúdo muito transformador(es) (tolerância para o seu perfil: '+allowed+'). Muitos overhauls juntos disputam o mesmo espaço de jogo.');
   r.oh=oh;
-  /* Fundamentos */
+  /* ---- Fundamentos: mods-base + essenciais conforme tamanho e objetivo ---- */
   var cw=0,cp=0,cmiss=[];
-  MODS.forEach(function(m){if(m.core&&m.ver.indexOf(t)>=0){var w=(H<=4096&&(m.id==='ferritecore'||m.id==='modernfix'))?2:1;cw+=w;if(set[m.id])cp+=w;else cmiss.push(m.name)}});
+  coreFor(t).forEach(function(m){var w=(H<=4096&&(m.id==='ferritecore'||m.id==='modernfix'))?2:1;cw+=w;if(set[m.id])cp+=w;else cmiss.push(m.name)});
+  var ess=essFor(t),emiss=[];
+  for(var g in GRNEED){
+    var R=GRNEED[g];if(!ess[g]||!ess[g].length)continue;
+    if(R.minN&&content.length<R.minN)continue;
+    if(R.dim&&W[R.dim]<R.minW)continue;
+    cw+=R.w;
+    if(groups[g]&&groups[g].length)cp+=R.w;else{emiss.push(g);r.missEss.push(g)}
+  }
   r.crit.fu=cw?100*cp/cw:100;
-  if(!lite)r.notes.fu.push(cmiss.length?'Faltam fundamentos recomendados: '+cmiss.join(', ')+'.':'Todos os fundamentos recomendados para '+V.id+' estão presentes.');
-  /* Total */
+  if(!lite){
+    r.notes.fu.push(cmiss.length?'Faltam fundamentos recomendados: '+cmiss.join(', ')+'.':'Todos os mods-base de otimização para '+V.id+' estão presentes.');
+    emiss.forEach(function(g){r.notes.fu.push('Falta '+GRNEED[g].label+'.');var top=ess[g][0];r.issues.push({sev:'info',text:'Falta '+esc(GRNEED[g].label)+' para este objetivo e tamanho de pack.',fix:{act:'add',id:top.id,label:'Adicionar '+top.name}})});
+  }
+  /* ---- Sinergia e coesão ---- */
+  var syn=0,overs=0;
+  COMBOS.forEach(function(c){
+    var have=c.m.filter(function(i){return set[i]}),miss=c.m.filter(function(i){return !set[i]&&BY[i]&&BY[i].ver.indexOf(t)>=0&&S.ban.indexOf(i)<0});
+    if(have.length>=2)syn+=c.w*(have.length-1);
+    if(have.length>=1&&miss.length)r.combos.push({n:c.n,have:have,miss:miss,w:c.w,full:false});
+    else if(have.length>=2&&!miss.length)r.combos.push({n:c.n,have:have,miss:[],w:c.w,full:true});
+  });
+  var fo2=[];
+  FAMS.forEach(function(f){var have=f.m.filter(function(i){return set[i]});if(have.length>f.free){overs+=f.p*(have.length-f.free);fo2.push({n:f.n,have:have})}});
+  r.syn=syn;r.overs=overs;
+  var ne2=Math.max(1,n-orph.length);
+  r.crit.sy=clamp(25+75*(1-Math.exp(-syn/(0.08*ne2+1.5)))-12*overs,0,100);
+  if(!lite){
+    var full=r.combos.filter(function(c){return c.full&&c.have.length>=2});
+    r.notes.sy.push(full.length?full.length+' combinação(ões) que se reforçam: '+full.slice(0,4).map(function(c){return c.n}).join(', ')+(full.length>4?'…':'')+'.':'Nenhuma combinação que se reforce no pack ainda.');
+    var part=r.combos.filter(function(c){return !c.full});
+    if(part.length)r.notes.sy.push('Combinações que podem crescer: '+part.slice(0,3).map(function(c){return c.n}).join(', ')+'.');
+    fo2.forEach(function(f){r.notes.sy.push('Sobreposição em '+f.n+': '+f.have.map(function(i){return BY[i].name}).join(' + ')+'. Disputam o mesmo espaço de jogo.');r.issues.push({sev:'info',text:'Sobreposição em '+esc(f.n)+': '+f.have.map(function(i){return '<b>'+esc(BY[i].name)+'</b>'}).join(' + ')+'. Podem coexistir, mas competem por progressão.'})});
+  }
+  /* ---- Total ---- */
   var w=critWeights(),tot=0;for(var k in w)tot+=w[k]*r.crit[k];
   tot*=0.5+0.5*(r.crit.al/100);
   if(conf.length)tot=Math.min(tot,70);
   if(md.length)tot=Math.min(tot,78);
+  if(r.ratio>1)tot=Math.min(tot,45);else if(r.ratio>0.9)tot=Math.min(tot,65);
   tot-=Math.min(12,2*unavail.length);
   r.total=clamp(tot,0,100);
   r.issues.sort(function(a,b){var o={err:0,warn:1,info:2};return o[a.sev]-o[b.sev]});
@@ -450,15 +548,84 @@ function withDeps(id,t,ids){
   (function go(i){if(seen[i])return;var m=BY[i];if(!m||m.ver.indexOf(t)<0){ok=false;return}seen[i]=1;depsOf(m,t).forEach(go);add.push(i)})(id);
   return ok?add:null;
 }
-function bestAdds(ids,t,limit){
+function ramOf(list){return list.reduce(function(s,i){return s+BY[i].ram},0)}
+/* por que esta sugestão ajuda: lacuna, combinação, fundamento ou custo */
+function whyTags(m,add,base,t){
+  var tags=[];
+  (base.lacks||[]).forEach(function(k){if(m.a[k]>=1)tags.push('fecha lacuna em '+DK[k].n.toLowerCase())});
+  COMBOS.forEach(function(c){if(c.m.indexOf(m.id)>=0&&c.m.some(function(i){return i!==m.id&&base.combos.some(function(x){return x.n===c.n&&x.have.indexOf(i)>=0})}))tags.push('completa “'+c.n.toLowerCase()+'”')});
+  if(m.core)tags.push('fundamento');
+  if(m.grp&&GRNEED[m.grp]&&base.missEss.indexOf(m.grp)>=0)tags.push('essencial: '+GRNEED[m.grp].label.split(' (')[0]);
+  var rm=ramOf(add);
+  if(rm<=0)tags.push('libera memória');else if(rm<=15)tags.push('muito leve');
+  return tags.slice(0,3);
+}
+function bestAdds(ids,t,limit,mode){
   var base=score(ids,t,true),out=[];
   MODS.forEach(function(m){
-    if(ids.indexOf(m.id)>=0||m.ver.indexOf(t)<0||S.ban.indexOf(m.id)>=0)return;
+    if(m.lib||ids.indexOf(m.id)>=0||m.ver.indexOf(t)<0||S.ban.indexOf(m.id)>=0)return;
     var add=withDeps(m.id,t,ids);if(!add)return;
-    var r=score(ids.concat(add),t,true);out.push({m:m,add:add,gain:r.total-base.total,r:r});
+    var r=score(ids.concat(add),t,true),rm=ramOf(add);
+    out.push({m:m,add:add,gain:r.total-base.total,r:r,ram:rm,eff:(r.total-base.total)/Math.max(0.4,rm/100)});
   });
-  out.sort(function(a,b){return b.gain-a.gain});
-  return {base:base,list:out.slice(0,limit)};
+  out.sort(mode==='eff'?function(a,b){return b.eff-a.eff}:mode==='ram'?function(a,b){return a.ram-b.ram||b.gain-a.gain}:function(a,b){return b.gain-a.gain});
+  if(mode==='eff'||mode==='ram')out=out.filter(function(x){return x.gain>0.05});
+  var top=out.slice(0,limit);top.forEach(function(x){x.tags=whyTags(x.m,x.add,base,t)});
+  return {base:base,list:top};
+}
+/* troca um mod do pack por outro da mesma função (grupo ou subcategoria) */
+function swapCandidates(ids,t,limit){
+  var base=score(ids,t,true),best={};
+  ids.forEach(function(id){
+    var m=BY[id];if(!m||m.lib)return;
+    if(ids.some(function(o){return o!==id&&BY[o]&&depsOf(BY[o],t).indexOf(id)>=0}))return;
+    var rest=ids.filter(function(x){return x!==id});
+    MODS.forEach(function(c){
+      if(c.id===id||c.lib||ids.indexOf(c.id)>=0||c.ver.indexOf(t)<0||S.ban.indexOf(c.id)>=0)return;
+      if(!((c.grp&&c.grp===m.grp)||(c.cat===m.cat&&c.sub&&c.sub===m.sub)))return;
+      var add=withDeps(c.id,t,rest);if(!add)return;
+      var r=score(rest.concat(add),t,true),g=r.total-base.total;
+      if(!best[id]||g>best[id].gain)best[id]={from:m,to:c,add:add,gain:g,r:r};
+    });
+  });
+  var out=Object.keys(best).map(function(k){return best[k]}).filter(function(x){return x.gain>0.15});
+  out.sort(function(a,b){return b.gain-a.gain});return {base:base,list:out.slice(0,limit)};
+}
+/* o que falta em cada área que você priorizou, com os melhores mods para fechar */
+function gapList(ids,t){
+  var base=score(ids,t,true),out=[];
+  (base.lacks||[]).forEach(function(k){
+    var cands=MODS.filter(function(m){return !m.lib&&m.a[k]>=1&&ids.indexOf(m.id)<0&&m.ver.indexOf(t)>=0&&S.ban.indexOf(m.id)<0})
+      .sort(function(a,b){return b.a[k]-a.a[k]||(modFit(b)||0)-(modFit(a)||0)}).slice(0,10);
+    var rows=[];
+    cands.forEach(function(m){var add=withDeps(m.id,t,ids);if(!add)return;var r=score(ids.concat(add),t,true);rows.push({m:m,add:add,gain:r.total-base.total})});
+    rows.sort(function(a,b){return b.gain-a.gain});
+    out.push({k:k,have:base.Pd[k],need:(S.w[k]/10)*base.SAT,rows:rows.slice(0,3)});
+  });
+  return {base:base,list:out};
+}
+/* fundamentos e essenciais que ainda não estão no pack */
+function missingFund(ids,t){
+  var set={};ids.forEach(function(i){set[i]=1});var out=[];
+  coreFor(t).forEach(function(m){if(!set[m.id]&&S.ban.indexOf(m.id)<0)out.push(m.id)});
+  var base=score(ids,t,true),ess=essFor(t);
+  (base.missEss||[]).forEach(function(g){if(ess[g]&&ess[g][0])out.push(ess[g][0].id)});
+  return out;
+}
+/* plano de ação: o que fazer primeiro, em ordem de importância */
+function actionPlan(t){
+  var c=score(S.pack,t),steps=[];
+  c.issues.filter(function(i){return i.sev==='err'}).slice(0,3).forEach(function(i){steps.push({sev:'err',text:i.text,btn:i.fix?{act:i.fix.act,id:i.fix.id,label:i.fix.label}:null})});
+  c.issues.filter(function(i){return i.sev==='warn'}).slice(0,2).forEach(function(i){steps.push({sev:'warn',text:i.text,btn:i.fix?{act:i.fix.act,id:i.fix.id,label:i.fix.label}:null})});
+  var mf=missingFund(S.pack,t);
+  if(S.pack.length&&mf.length)steps.push({sev:'warn',text:'Faltam <b>'+mf.length+'</b> fundamento(s) para '+esc(VT[t].id)+': '+mf.slice(0,4).map(function(i){return '<b>'+esc(BY[i].name)+'</b>'}).join(', ')+(mf.length>4?'…':'')+'.',btn:{act:'addfund',id:'',label:'Adicionar todos'}});
+  var g=gapList(S.pack,t).list[0];
+  if(S.pack.length&&g&&g.rows[0])steps.push({sev:'info',text:'Falta conteúdo em <b>'+esc(DK[g.k].n)+'</b> (nota '+S.w[g.k]+' pedida; o pack entrega '+Math.round(Math.min(10,g.have/Math.max(0.1,g.need)*S.w[g.k]))+'). Melhor opção: <b>'+esc(g.rows[0].m.name)+'</b> ('+(g.rows[0].gain>=0?'+':'')+fmt(g.rows[0].gain,1)+' pts).',btn:{act:'add',id:g.rows[0].m.id,label:'Adicionar'}});
+  var rc=S.pack.length?removeCandidates(S.pack,t).filter(function(x){return x.gain>0.8}).slice(0,1)[0]:null;
+  if(rc)steps.push({sev:'info',text:'<b>'+esc(rc.m.name)+'</b> pesa mais do que entrega: remover melhora a nota em <b>+'+fmt(rc.gain,1)+'</b>.',btn:{act:'rm',id:rc.m.id,label:'Remover'}});
+  var pc=c.combos.filter(function(x){return !x.full&&x.miss.length}).sort(function(a,b){return b.w*b.have.length-a.w*a.have.length})[0];
+  if(pc){var mm=BY[pc.miss[0]];steps.push({sev:'info',text:'Combinação “'+esc(pc.n)+'”: você tem '+pc.have.map(function(i){return '<b>'+esc(BY[i].name)+'</b>'}).join(', ')+'. Para reforçar, adicione <b>'+esc(mm.name)+'</b>.',btn:{act:'add',id:mm.id,label:'Adicionar'}})}
+  return steps.slice(0,7);
 }
 function autoBuild(t,start){
   var ids=start.slice(),g=0;
@@ -480,7 +647,7 @@ function removeCandidates(ids,t){
   out.sort(function(a,b){return b.gain-a.gain});return out;
 }
 function deltaText(a,b){
-  var names={al:'Alinhamento',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos'},w=critWeights(),d=[];
+  var names=CS,w=critWeights(),d=[];
   for(var k in names){var x=(b.crit[k]-a.crit[k]);if(Math.abs(x)>=1)d.push([k,x,Math.abs(x*w[k])])}
   d.sort(function(p,q){return q[2]-p[2]});
   return d.slice(0,3).map(function(x){return (x[1]>0?'+':'')+Math.round(x[1])+' '+names[x[0]]}).join(' · ');
@@ -539,7 +706,7 @@ function brief(){
   +'Fidelidade ao vanilla: '+S.vanilla+'/10. Prioridade de desempenho: '+S.fps+'/10. Vontade de versão nova: '+S.nov+'/10. Tamanho-alvo: ~'+S.size+' mods.\n'
   +'LIMITES: jogo solo, loader Fabric, '+S.heap+' GB de RAM para o jogo, versão '+(S.ver==='auto'?'a definir (hoje a ferramenta sugere '+v.id+')':v.id)+' (Java '+v.java+').\n\n'
   +'PACK ATUAL ('+S.pack.length+' mods):\n'+(packList()||'(vazio)')+'\n\n'
-  +'DIAGNÓSTICO DA MINHA FERRAMENTA (estimativas): nota '+Math.round(c.total)+'/100; alinhamento '+Math.round(c.crit.al)+', foco '+Math.round(c.crit.fo)+', desempenho '+Math.round(c.crit.pf)+', estabilidade '+Math.round(c.crit.es)+', escopo '+Math.round(c.crit.sc)+', fundamentos '+Math.round(c.crit.fu)+'. RAM estimada ~'+fmt(c.ram,0)+' MB.\n\n'
+  +'DIAGNÓSTICO DA MINHA FERRAMENTA (estimativas): nota '+Math.round(c.total)+'/100; alinhamento '+Math.round(c.crit.al)+', foco '+Math.round(c.crit.fo)+', desempenho '+Math.round(c.crit.pf)+', estabilidade '+Math.round(c.crit.es)+', escopo '+Math.round(c.crit.sc)+', fundamentos '+Math.round(c.crit.fu)+', sinergia '+Math.round(c.crit.sy)+'. RAM estimada ~'+fmt(c.ram,0)+' MB.\n\n'
   +'PEDIDO:\n1) Para cada mod, confirme se existe build estável para a versão alvo e a data da última atualização; marque os abandonados.\n2) Liste conflitos, incompatibilidades e dependências faltando.\n3) Sugira mods FORA da lista que sirvam ao objetivo ('+top.slice(0,3).map(function(d){return d.n}).join(', ')+'), com RAM aproximada, e diga o que cortar para compensar.\n4) Diga se outra versão do Minecraft serviria melhor ao objetivo, com base na disponibilidade real dos mods.\n5) Dê uma nota de 0 a 100 justificada por critérios técnicos (alinhamento, foco, desempenho, estabilidade, escopo, fundamentos) e compare com a minha.';
 }
 
@@ -596,17 +763,18 @@ function vGoal(){
    +VERS.map(function(v){return '<option value="'+v.t+'"'+(S.ver===v.t?' selected':'')+'>'+v.id+'</option>'}).join('')+'</select><span></span></div>';
   h+='<div class="insight" id="insight"></div></section></div>';
   h+='<details class="block"><summary>Como a nota é calculada</summary><div style="margin-top:10px;font-size:.92rem">'
-   +'<p>A nota final (0 a 100) soma seis critérios. Os pesos mudam com a sua “prioridade de desempenho”; hoje: '
-   +(function(){var w=critWeights();return 'alinhamento '+Math.round(w.al*100)+'%, foco '+Math.round(w.fo*100)+'%, desempenho '+Math.round(w.pf*100)+'%, estabilidade '+Math.round(w.es*100)+'%, escopo '+Math.round(w.sc*100)+'%, fundamentos '+Math.round(w.fu*100)+'%.'})()+'</p>'
+   +'<p>A nota final (0 a 100) soma sete critérios. Os pesos mudam com a sua “prioridade de desempenho”; hoje: '
+   +(function(){var w=critWeights();return CK.map(function(k){return CS[k].toLowerCase()+' '+Math.round(w[k]*100)+'%'}).join(', ')+'.'})()+'</p>'
    +'<ul class="notes" style="font-size:.9rem"><li><b>Alinhamento:</b> cobertura de cada área pedida (45%), similaridade de direção entre o que você pediu e o que o pack entrega (30%) e fidelidade ao vanilla (25%).</li>'
    +'<li><b>Foco:</b> parcela do conteúdo que cai nas suas áreas prioritárias, mods fora do objetivo e dispersão em áreas indesejadas.</li>'
-   +'<li><b>Desempenho:</b> RAM estimada contra o heap (60%) e carga de CPU somada (40%). Sodium, Lithium e afins entram com custo negativo.</li>'
-   +'<li><b>Estabilidade:</b> conflitos (-30), dependências faltando (-12), mod sem build na versão (-10), redundâncias (-10) e mods experimentais (-3).</li>'
+   +'<li><b>Desempenho:</b> RAM contra o heap (55%, com queda acelerada acima de 55% e mais ainda acima de 85%), carga de CPU somada (30%) e carga de GPU de shaders, LODs e física (15%). Sodium, Lithium e afins entram com custo negativo.</li>'
+   +'<li><b>Estabilidade:</b> conflitos (-30), dependências faltando (-12), mod sem build na versão (-10), redundâncias (-10), mods experimentais (-3) e mods sem atualização há mais de 18 meses para a versão escolhida.</li>'
    +'<li><b>Escopo:</b> distância entre o tamanho do pack e a meta, e excesso de mods muito transformadores competindo.</li>'
-   +'<li><b>Fundamentos:</b> presença dos mods-base de otimização e interface para a versão escolhida.</li></ul>'
-   +'<p>A nota total ainda é reduzida quando o alinhamento é baixo: um pack rápido e estável que não entrega o que você quer não é um bom pack. Conflitos limitam a nota a 70; dependências faltando, a 78.</p>'
-   +'<p class="sub">RAM e CPU por mod são estimativas de ordem de grandeza (conhecimento até meados de 2026), não medições. Meça o seu pack final com o spark.</p></div></details>';
-  h+='<p class="foot">Catálogo curado com ~'+MODS.length+' mods Fabric. Disponibilidade por versão é estimativa: use o link “verificar” de cada mod no Modrinth antes de montar.</p>';
+   +'<li><b>Fundamentos:</b> mods-base de otimização para a versão escolhida e essenciais que dependem do seu objetivo: visualizador de receitas em packs médios, informação ao mirar em packs maiores e minimapa se você prioriza exploração.</li>'
+   +'<li><b>Sinergia e coesão:</b> combinações de mods que se reforçam (por exemplo Terralith + Tectonic, as classes RPG, o ecossistema Cobblemon) somam pontos; mods da mesma família que disputam o mesmo espaço (várias indústrias, vários overhauls de bioma, redes de armazenamento) tiram pontos.</li></ul>'
+   +'<p>A nota total ainda é reduzida quando o alinhamento é baixo: um pack rápido e estável que não entrega o que você quer não é um bom pack. Conflitos limitam a nota a 70; dependências faltando, a 78; RAM estimada acima de 90% do heap, a 65.</p>'
+   +'<p class="sub">RAM, CPU e GPU por mod são estimativas de ordem de grandeza, não medições; meça o seu pack final com o spark. Já as versões, dependências e datas de atualização vêm da API do Modrinth (verificado em '+esc(DATA_DATE||'—')+').</p></div></details>';
+  h+='<p class="foot">Catálogo com '+MODS.length+' mods Fabric (inclui bibliotecas), conferidos no Modrinth em '+esc(DATA_DATE||'—')+'. Builds mudam todos os dias: use o link de cada mod no Modrinth antes de baixar.</p>';
   setTimeout(renderInsight,0);
   return h;
 }
@@ -674,15 +842,15 @@ function card(m){
    +(inP?'':'<button class="btn ghost sm" data-act="ban" data-id="'+m.id+'" title="'+(ban?'Voltar a considerar':'Descartar: não sugerir')+'">'+(ban?'Reativar':'Descartar')+'</button>')+'</div></div>';
 }
 function radar(c){
-  var keys=['al','fo','pf','es','sc','fu'],lab=['Alinhamento','Foco','Desempenho','Estabilidade','Escopo','Fundamentos'];
+  var keys=CK,lab=CK.map(function(k){return CS[k]}),NK=keys.length;
   var cx=140,cy=120,R=78;
-  function pt(i,v){var a=-Math.PI/2+i*2*Math.PI/6;return [cx+Math.cos(a)*R*v,cy+Math.sin(a)*R*v]}
-  var s='<svg class="radar" viewBox="-50 0 380 240" role="img" aria-label="Radar dos seis critérios">';
+  function pt(i,v){var a=-Math.PI/2+i*2*Math.PI/NK;return [cx+Math.cos(a)*R*v,cy+Math.sin(a)*R*v]}
+  var s='<svg class="radar" viewBox="-50 0 380 240" role="img" aria-label="Radar dos sete critérios">';
   [0.25,0.5,0.75,1].forEach(function(f){s+='<polygon class="ring" points="'+keys.map(function(k,i){return pt(i,f).join(',')}).join(' ')+'"/>'});
   keys.forEach(function(k,i){var p=pt(i,1);s+='<line class="axis" x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'"/>'});
   s+='<polygon class="area" points="'+keys.map(function(k,i){return pt(i,c.crit[k]/100).join(',')}).join(' ')+'"/>';
   keys.forEach(function(k,i){
-    var a=-Math.PI/2+i*2*Math.PI/6,x=cx+Math.cos(a)*(R+14),y=cy+Math.sin(a)*(R+14)+4,an=Math.cos(a)>0.3?'start':Math.cos(a)<-0.3?'end':'middle';
+    var a=-Math.PI/2+i*2*Math.PI/NK,x=cx+Math.cos(a)*(R+14),y=cy+Math.sin(a)*(R+14)+4,an=Math.cos(a)>0.3?'start':Math.cos(a)<-0.3?'end':'middle';
     s+='<text x="'+x+'" y="'+y+'" text-anchor="'+an+'">'+lab[i]+' '+Math.round(c.crit[k])+'</text>';
   });
   return s+'</svg>';
@@ -693,10 +861,10 @@ function vPack(){
   if(c.empty){
     return h+'<div class="empty" style="margin-top:14px"><p><b>Nenhum mod ainda.</b></p><p>Adicione mods pelo Catálogo ou deixe a ferramenta montar uma primeira versão a partir do seu objetivo.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn" data-act="auto" data-mode="replace">Montar pack automaticamente</button><button class="btn ghost" data-act="tab" data-id="catalog">Abrir catálogo</button></div></div>';
   }
-  var w=critWeights(),names={al:'Alinhamento ao objetivo',fo:'Foco',pf:'Desempenho',es:'Estabilidade',sc:'Escopo',fu:'Fundamentos'};
+  var w=critWeights(),names=CN;
   h+='<p class="lead">Nota calculada para '+esc(c.v.id)+(c.auto?' (a versão que melhor encaixa neste pack agora)':'')+'. Cada critério mostra o motivo, não só o número.</p>';
   h+='<section class="block"><div class="scoregrid"><div>'+radar(c)+'</div><div>';
-  ['al','fo','pf','es','sc','fu'].forEach(function(k){
+  CK.forEach(function(k){
     h+='<div class="crit"><div class="h"><b>'+names[k]+'<em>peso '+Math.round(w[k]*100)+'%</em></b><span style="color:'+barColor(c.crit[k])+'">'+Math.round(c.crit[k])+'</span></div><div class="bar"><i style="width:'+c.crit[k]+'%;background:'+barColor(c.crit[k])+'"></i></div><ul class="notes">'+c.notes[k].map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul></div>';
   });
   h+='</div></div></section>';
@@ -726,29 +894,93 @@ function vPack(){
   return h;
 }
 function vSuggest(){
-  var c=cur,t=recT();
-  var h='<h2>Sugestões</h2><p class="lead">Tudo aqui é recalculado a partir da sua nota: cada sugestão mostra quantos pontos o pack ganha ou perde e em quais critérios.</p>';
+  var t=recT();
+  var h='<h2>Sugestões</h2><p class="lead">Tudo aqui é recalculado a partir da sua nota: cada sugestão mostra quantos pontos o pack ganha ou perde, em quais critérios e por quê.</p>';
+  h+='<section class="block" data-fx="plan"><h3>Plano de ação</h3><p class="sub">O que fazer primeiro, em ordem de importância, para '+esc(VT[t].id)+'.</p><div id="planBox"><div class="empty">Calculando…</div></div></section>';
   h+='<section class="block"><h3>Versão ideal para o seu objetivo</h3><p class="sub">Para cada versão, a ferramenta monta o melhor pack possível só com mods que têm build conhecida nela. A recomendação considera a nota, o risco da versão e a sua vontade de usar o mais novo.</p><div id="vbox"><div class="empty">Calculando…</div></div></section>';
   h+='<section class="block"><h3>Verificação ao vivo (Modrinth)</h3><div id="liveBox"></div></section>';
-  var b=bestAdds(S.pack,t,10);
-  h+='<section class="block"><h3>Melhores adições agora</h3><p class="sub">Em '+esc(VT[t].id)+'. Dependências necessárias entram junto.</p>';
-  if(!b.list.length)h+='<div class="empty">Nenhuma adição melhora a nota. O pack está saturado para este objetivo.</div>';
-  b.list.forEach(function(x){
-    h+='<div class="sugrow"><div><b>'+esc(x.m.name)+'</b>'+(x.add.length>1?' <span class="tag">+'+(x.add.length-1)+' dependência(s)</span>':'')+'<div class="why">'+esc(x.m.desc)+'<br>'+esc(deltaText(b.base,x.r)||'efeito pequeno')+'</div></div><div class="gain'+(x.gain<0?' neg':'')+'">'+(x.gain>0?'+':'')+fmt(x.gain,1)+'</div><button class="btn sm" data-act="add" data-id="'+x.m.id+'">Adicionar</button></div>';
-  });
-  h+='</section>';
-  if(S.pack.length){
-    var rc=removeCandidates(S.pack,t).filter(function(x){return x.gain>0.1}).slice(0,8);
-    h+='<section class="block"><h3>Candidatos a cortar</h3><p class="sub">Mods cuja remoção melhora a nota (peso morto, fora do foco ou custo alto).</p>';
-    if(!rc.length)h+='<div class="empty">Nada a cortar: nenhum mod remove peso sem perder valor.</div>';
-    rc.forEach(function(x){h+='<div class="sugrow"><div><b>'+esc(x.m.name)+'</b><div class="why">'+esc(deltaText(cur.t===t?cur:score(S.pack,t),x.r)||'efeito pequeno')+'</div></div><div class="gain">+'+fmt(x.gain,1)+'</div><button class="btn danger sm" data-act="rm" data-id="'+x.m.id+'">Remover</button></div>'});
-    h+='</section>';
-  }
+  h+='<section class="block"><h3>Melhores adições agora</h3><p class="sub">Em '+esc(VT[t].id)+'. Dependências necessárias entram junto. Bibliotecas não aparecem aqui: elas entram sozinhas quando um mod precisa.</p>'
+   +'<div class="row" id="sugSort" style="margin-bottom:8px">'+[['gain','Maior ganho'],['eff','Melhor custo-benefício'],['ram','Mais leves']].map(function(x){return '<button class="pre'+(ui.sugSort===x[0]?' on':'')+'" data-act="sugsort" data-id="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'
+   +'<div id="addBox"><div class="empty">Calculando…</div></div></section>';
+  h+='<section class="block"><h3>Lacunas do seu objetivo</h3><p class="sub">Áreas que você priorizou e o pack ainda não entrega, com os mods que mais ajudam em cada uma.</p><div id="gapBox"><div class="empty">Calculando…</div></div></section>';
+  h+='<section class="block"><h3>Combinações para completar</h3><p class="sub">Mods que se reforçam quando usados juntos. Cada membro a mais soma pontos de sinergia.</p><div id="comboBox"><div class="empty">Calculando…</div></div></section>';
+  h+='<section class="block"><h3>Trocas que melhoram a nota</h3><p class="sub">Substituir um mod por outro da mesma função (mesmo grupo ou subcategoria).</p><div id="swapBox"><div class="empty">Calculando…</div></div></section>';
+  h+='<section class="block"><h3>Candidatos a cortar</h3><p class="sub">Mods cuja remoção melhora a nota (peso morto, fora do foco ou custo alto).</p><div id="cutBox"><div class="empty">Calculando…</div></div></section>';
   h+='<section class="block"><h3>Montar pack automaticamente</h3><p class="sub">Algoritmo guloso: adiciona sempre o mod que mais aumenta a nota e para quando nada melhora, ou ao chegar perto da meta de tamanho ('+S.size+'). Pode parar antes da meta: mais mods não significaria um pack melhor.</p><div class="row"><button class="btn" data-act="auto" data-mode="replace">Montar do zero</button>'+(S.pack.length?'<button class="btn ghost" data-act="auto" data-mode="complete">Completar o pack atual</button>':'')+'</div></section>';
   return h;
 }
+function sugBtn(act,id,label,cls){return '<button class="btn sm'+(cls?' '+cls:'')+'" data-act="'+act+'" data-id="'+id+'">'+label+'</button>'}
+function addRows(b){
+  if(!b.list.length)return '<div class="empty">Nenhuma adição melhora a nota nesse critério. O pack está saturado para este objetivo.</div>';
+  return b.list.map(function(x){
+    return '<div class="sugrow"><div><b>'+esc(x.m.name)+'</b>'+(x.add.length>1?' <span class="tag">+'+(x.add.length-1)+' dependência(s)</span>':'')
+      +(x.tags.length?' '+x.tags.map(function(g){return '<span class="tag good">'+esc(g)+'</span>'}).join(' '):'')
+      +'<div class="why">'+esc(x.m.desc)+'<br>'+esc(deltaText(b.base,x.r)||'efeito pequeno')+' · RAM '+(x.ram>0?'+':'')+fmt(x.ram,0)+' MB</div></div>'
+      +'<div class="gain'+(x.gain<0?' neg':'')+'">'+(x.gain>0?'+':'')+fmt(x.gain,1)+'</div>'+sugBtn('add',x.m.id,'Adicionar')+'</div>';
+  }).join('');
+}
+function fillAdds(){
+  var el=$('#addBox');if(!el)return;
+  var b=bestAdds(S.pack,recT(),10,ui.sugSort);el.innerHTML=addRows(b);
+  var sb=$('#sugSort');if(sb)[].forEach.call(sb.children,function(x){x.classList.toggle('on',x.dataset.id===ui.sugSort)});
+  if(window.FX&&FX.sugIn)FX.sugIn(el);
+}
+function fillSuggest(){
+  var t=recT(),tok=++ui.sugTok;
+  function step(fn,ms){setTimeout(function(){if(tok!==ui.sugTok||ui.tab!=='suggest')return;try{fn()}catch(e){if(window.console)console.error(e)}},ms)}
+  var base;
+  step(function(){
+    var plan=actionPlan(t),el=$('#planBox');if(!el)return;
+    if(!S.pack.length){el.innerHTML='<div class="empty"><p><b>O pack está vazio.</b></p><p>Monte uma primeira versão a partir do seu objetivo e volte aqui para refinar.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn" data-act="auto" data-mode="replace">Montar pack automaticamente</button></div></div>'}
+    else if(!plan.length)el.innerHTML='<div class="issue info"><div class="t"><b>Nada urgente.</b> Sem erros, com fundamentos em dia e nenhuma lacuna relevante. Use as seções abaixo para lapidar.</div></div>';
+    else el.innerHTML=plan.map(function(st,i){return '<div class="issue step '+st.sev+'"><span class="stepn">'+(i+1)+'</span><div class="t">'+st.text+'</div>'+(st.btn?'<button class="btn sm ghost" data-act="'+st.btn.act+'" data-id="'+st.btn.id+'">'+esc(st.btn.label)+'</button>':'')+'</div>'}).join('');
+    if(window.FX&&FX.sugIn)FX.sugIn(el);
+  },10);
+  step(function(){fillAdds()},60);
+  step(function(){
+    var g=gapList(S.pack,t),el=$('#gapBox');if(!el)return;
+    if(!S.pack.length)el.innerHTML='<div class="empty">Monte o pack para ver as lacunas.</div>';
+    else if(!g.list.length)el.innerHTML='<div class="empty">Nenhuma lacuna relevante: as áreas que você priorizou estão cobertas.</div>';
+    else el.innerHTML=g.list.map(function(x){
+      var pct=Math.round(Math.min(1,x.have/Math.max(0.1,x.need))*100);
+      return '<div class="gaprow"><div class="gaph"><b>'+esc(DK[x.k].n)+'</b><span class="sub" style="margin:0">pedido '+S.w[x.k]+'/10 · entregue '+pct+'%</span></div><div class="bar"><i style="width:'+pct+'%;background:'+barColor(pct)+'"></i></div>'
+        +(x.rows.length?x.rows.map(function(r){return '<div class="sugrow"><div><b>'+esc(r.m.name)+'</b>'+(r.add.length>1?' <span class="tag">+'+(r.add.length-1)+' dependência(s)</span>':'')+'<div class="why">'+esc(r.m.desc)+'</div></div><div class="gain'+(r.gain<0?' neg':'')+'">'+(r.gain>0?'+':'')+fmt(r.gain,1)+'</div>'+sugBtn('add',r.m.id,'Adicionar')+'</div>'}).join(''):'<div class="why">Nenhum mod do catálogo cobre essa área nesta versão.</div>')+'</div>';
+    }).join('');
+    if(window.FX&&FX.sugIn)FX.sugIn(el);
+  },120);
+  step(function(){
+    var c=score(S.pack,t),el=$('#comboBox');if(!el)return;
+    var list=c.combos.slice().sort(function(a,b){return (b.full?0:1)-(a.full?0:1)||b.w*b.have.length-a.w*a.have.length});
+    if(!S.pack.length)el.innerHTML='<div class="empty">Monte o pack para ver as combinações.</div>';
+    else if(!list.length)el.innerHTML='<div class="empty">Nenhuma combinação conhecida com os mods atuais. Adicione mods de áreas como mapas, classes RPG, culinária ou estruturas para criar sinergias.</div>';
+    else el.innerHTML=list.slice(0,10).map(function(x){
+      return '<div class="sugrow"><div><b>'+esc(x.n)+'</b> '+(x.full?'<span class="tag good">completa</span>':'<span class="tag">em andamento</span>')
+        +'<div class="why">Você tem: '+x.have.map(function(i){return esc(BY[i].name)}).join(', ')+(x.miss.length?'<br>Falta: '+x.miss.slice(0,4).map(function(i){return esc(BY[i].name)}).join(', ')+(x.miss.length>4?'…':''):'')+'</div></div><div class="gain" title="pontos de sinergia por membro">×'+fmt(x.w,1)+'</div>'
+        +(x.miss.length?sugBtn('add',x.miss[0],'+ '+esc(BY[x.miss[0]].name.split(' ')[0]),'ghost'):'<span></span>')+'</div>';
+    }).join('');
+    if(window.FX&&FX.sugIn)FX.sugIn(el);
+  },180);
+  step(function(){
+    var s=swapCandidates(S.pack,t,6),el=$('#swapBox');if(!el)return;
+    if(!S.pack.length)el.innerHTML='<div class="empty">Monte o pack para ver as trocas.</div>';
+    else if(!s.list.length)el.innerHTML='<div class="empty">Nenhuma troca melhora a nota: os mods atuais já são a melhor escolha para o objetivo.</div>';
+    else el.innerHTML=s.list.map(function(x){
+      return '<div class="sugrow"><div><b>'+esc(x.from.name)+'</b> <span class="swap">→</span> <b>'+esc(x.to.name)+'</b>'+(x.add.length>1?' <span class="tag">+'+(x.add.length-1)+' dependência(s)</span>':'')
+        +'<div class="why">'+esc(x.to.desc)+'<br>'+esc(deltaText(s.base,x.r)||'efeito pequeno')+'</div></div><div class="gain">+'+fmt(x.gain,1)+'</div><button class="btn sm" data-act="swap" data-from="'+x.from.id+'" data-id="'+x.to.id+'">Trocar</button></div>';
+    }).join('');
+    if(window.FX&&FX.sugIn)FX.sugIn(el);
+  },260);
+  step(function(){
+    var el=$('#cutBox');if(!el)return;
+    if(!S.pack.length){el.innerHTML='<div class="empty">Monte o pack para ver os cortes.</div>';return}
+    var rc=removeCandidates(S.pack,t).filter(function(x){return x.gain>0.1}).slice(0,8),b0=cur.t===t?cur:score(S.pack,t);
+    if(!rc.length)el.innerHTML='<div class="empty">Nada a cortar: nenhum mod remove peso sem perder valor.</div>';
+    else el.innerHTML=rc.map(function(x){return '<div class="sugrow"><div><b>'+esc(x.m.name)+'</b><div class="why">'+esc(deltaText(b0,x.r)||'efeito pequeno')+'</div></div><div class="gain">+'+fmt(x.gain,1)+'</div>'+sugBtn('rm',x.m.id,'Remover','danger')+'</div>'}).join('');
+    if(window.FX&&FX.sugIn)FX.sugIn(el);
+  },340);
+}
 function afterSuggest(){
-  renderLive();
+  renderLive();fillSuggest();
   var key=vkey();
   var box=$('#vbox');if(!box)return;
   if(ui.vkey===key&&ui.vres){drawVersions();return}
@@ -955,6 +1187,7 @@ var NET=!window.claude;
 var LIVE=(function(){try{var r=localStorage.getItem(LKEY);var o=r?JSON.parse(r):null;return(o&&o.mods)?o:{ts:0,mods:{}}}catch(e){return {ts:0,mods:{}}}})();
 function liveSave(){try{localStorage.setItem(LKEY,JSON.stringify(LIVE))}catch(e){}}
 function applyLive(){
+  CORET={};ESST={};
   MODS.forEach(function(m){
     if(m.ver0===undefined)m.ver0=m.ver;
     var L=LIVE.mods[m.id];
@@ -1116,6 +1349,9 @@ function act(a,d,el){
       cids.forEach(function(i){var k=S.done.indexOf(i);if(on&&k<0)S.done.push(i);else if(!on&&k>=0)S.done.splice(k,1)});
       persist();renderTabs();var y1=window.scrollY||0;renderView();window.scrollTo(0,y1);break}
     case 'ckclear':arm(el,function(){S.done=[];persist();renderTabs();renderView()},'Zerar tudo?');break;
+    case 'sugsort':ui.sugSort=d.id;fillAdds();break;
+    case 'addfund':{var tf=recT(),fl=missingFund(S.pack,tf);fl.forEach(addMod);commit();toast(fl.length+' fundamento(s) adicionado(s).');break}
+    case 'swap':{var tw=recT();rmMod(d.from);addMod(d.id);commit();toast('Troca feita: '+BY[d.from].name+' por '+BY[d.id].name+'.');break}
     case 'usever':S.ver=d.id;persist();recompute();renderTop();renderView();break;
     case 'auto':{
       var t=recT(),start=d.mode==='complete'?S.pack:[];
