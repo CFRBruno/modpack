@@ -236,6 +236,7 @@ summary{cursor:pointer;font-weight:600}
 <main><div class="wrap" id="view"></div></main>
 <div id="toast" role="status"></div>
 
+<script src="data/mods.js"></script>
 <script>
 (function(){
 'use strict';
@@ -264,12 +265,13 @@ var VERS=[
  {t:'B',id:'1.21.1',vq:'1.21.1',java:21,risk:0,idx:1,note:'Equilíbrio: conteúdo maduro e muitos mods ainda ativos.'},
  {t:'C',id:'1.21.11',vq:'1.21.11',java:21,risk:2,idx:2,note:'Última da linha 1.x (ofuscada); recursos novos sem trocar de Java.'},
  {t:'D',id:'26.1.x',vq:'26.1.2',java:25,risk:4,idx:3,note:'Primeira versão sem ofuscação; exige Java 25 e mods recompilados (nenhum de 1.21.11 ou anterior funciona).'},
- {t:'E',id:'26.2',vq:'26.2',java:25,risk:6,idx:4,note:'Mais nova que o catálogo cobre; otimização já atualizada, conteúdo pesado ainda chegando. Pode haver versões ainda mais novas.'}
+ {t:'E',id:'26.2',vq:'26.2',java:25,risk:6,idx:4,note:'Base 26.x já bem atendida por otimização e bibliotecas; conteúdo pesado ainda migrando.'},
+ {t:'F',id:'26.3',vq:'26.3',java:25,risk:7,idx:5,note:'A mais nova com builds no Modrinth quando o catálogo foi verificado. Melhor para quem aceita testar; podem existir versões ainda mais novas.'}
 ];
 var VT={};VERS.forEach(function(v){VT[v.t]=v});
-var CATS=['Otimização','Bibliotecas','Interface & QoL','Mapas & Navegação','Visual & Som','Mundo & Estruturas','Aventura & Combate','Tecnologia','Magia','Sobrevivência','Comida & Fazenda','Criaturas','Construção'];
+var CATS=['Otimização','Bibliotecas','Interface & QoL','Mapas & Navegação','Visual & Som','Mundo & Estruturas','Aventura & Combate','Itens & Equipamentos','Tecnologia','Armazenamento','Magia','Sobrevivência','Comida & Fazenda','Criaturas','Construção','Ferramentas & Utilidades'];
 var INFRA={'Otimização':1,'Bibliotecas':1};
-var GR={recipes:'visualizador de receitas',minimap:'minimapa',tooltip:'informação ao mirar blocos',farview:'distância de renderização estendida'};
+var GR={recipes:'visualizador de receitas',minimap:'minimapa',tooltip:'informação ao mirar blocos',farview:'distância de renderização estendida',dynlights:'luz dinâmica',ctm:'texturas conectadas',graves:'túmulos',waystone:'pedras de viagem',seasons:'estações do ano'};
 var PRESETS=[
  {id:'vanilla',n:'Vanilla+ polido',w:{ex:3,te:0,ma:0,su:2,co:3,cb:1,vi:6,cr:1,qo:8},vanilla:9,fps:8,size:40,d:'Quase vanilla, só mais bonito e confortável.'},
  {id:'aventura',n:'Aventura e exploração',w:{ex:9,te:0,ma:2,su:4,co:2,cb:6,vi:6,cr:3,qo:5},vanilla:5,fps:6,size:70,d:'Mundo novo, estruturas grandes, chefes.'},
@@ -281,134 +283,23 @@ var PRESETS=[
 ];
 
 var MODS=[],BY={};
-function M(id,name,cat,desc,aff,ram,cpu,inv,ver,o){
-  o=o||{};var a={};
-  (aff||'').split(' ').filter(Boolean).forEach(function(s){a[s.slice(0,2)]=+s.slice(2)});
-  var m={id:id,name:name,cat:cat,desc:desc,a:a,ram:ram,cpu:cpu,inv:inv,ver:ver,
-    dep:o.dep||(o.nofapi?[]:['fabric-api']),grp:o.grp||null,core:!!o.core,fragile:!!o.fragile,
-    lib:!!o.lib,gpu:!!o.gpu,heavy:!!o.heavy,note:o.note||'',con:o.con||[]};
-  MODS.push(m);BY[id]=m;
-}
-/* Otimização */
-M('sodium','Sodium','Otimização','Reescreve o renderizador de chunks: muito mais FPS e menos engasgos.','',-40,-5,0,'ABCDE',{core:1,nofapi:1});
-M('lithium','Lithium','Otimização','Otimiza IA, física e ticks sem alterar o comportamento do jogo.','',-20,-3,0,'ABCDE',{core:1,nofapi:1});
-M('ferritecore','FerriteCore','Otimização','Corta o uso de RAM de blocos e modelos; essencial com 4 GB.','',-160,0,0,'ABCD',{core:1,nofapi:1});
-M('modernfix','ModernFix','Otimização','Acelera o carregamento e reduz RAM; corrige gargalos conhecidos.','',-120,-1,0,'ABCD',{core:1,nofapi:1});
-M('entityculling','Entity Culling','Otimização','Não renderiza entidades e blocos animados fora do campo de visão.','',0,-2,0,'ABCDE',{core:1,nofapi:1});
-M('immediatelyfast','ImmediatelyFast','Otimização','Acelera HUD, texto e renderização imediata.','',0,-1.5,0,'ABCDE',{core:1,nofapi:1});
-M('c2me','C2ME','Otimização','Gera e carrega chunks em várias threads; menos travadas ao explorar.','',40,-2,0,'ABCDE',{nofapi:1,fragile:1,note:'Experimental; pode atrapalhar mods de geração de mundo.'});
-M('memoryleakfix','Memory Leak Fix','Otimização','Corrige vazamentos de memória do jogo base.','',-40,0,0,'ABCD',{nofapi:1});
-M('dynamicfps','Dynamic FPS','Otimização','Reduz FPS e carga quando a janela está sem foco.','',0,-0.5,0,'ABCDE',{nofapi:1});
-M('spark','spark','Otimização','Profiler de TPS, CPU e memória para achar o mod culpado.','qo1',10,0,0,'ABCDE',{nofapi:1});
-M('sodiumextra','Sodium Extra','Otimização','Opções extras no menu do Sodium: animações, partículas, FPS.','',5,0,0,'ABCDE',{dep:['sodium']});
-M('rso','Reese’s Sodium Options','Otimização','Menu de vídeo do Sodium reorganizado em abas.','',5,0,0,'ABCDE',{dep:['sodium']});
-M('debugify','Debugify','Otimização','Corrige bugs do vanilla reportados no Mojira.','',5,0,1,'ABC',{nofapi:1});
-/* Bibliotecas */
-M('fabric-api','Fabric API','Bibliotecas','Base exigida pela maioria dos mods Fabric.','',25,0,0,'ABCDE',{core:1,nofapi:1,lib:1});
-M('yacl','YetAnotherConfigLib','Bibliotecas','Biblioteca de telas de configuração.','',8,0,0,'ABCDE',{lib:1});
-M('cloth-config','Cloth Config API','Bibliotecas','Biblioteca de configuração usada por vários mods.','',6,0,0,'ABCD',{lib:1});
-M('architectury','Architectury API','Bibliotecas','Camada multiplataforma usada por muitos mods.','',15,0,0,'ABCD',{lib:1});
-M('geckolib','GeckoLib','Bibliotecas','Animação de modelos para mobs e itens.','',20,0,0,'ABCDE',{lib:1});
-M('yung-api','YUNG’s API','Bibliotecas','Base das estruturas “Better” do YUNG.','',10,0,0,'ABC',{lib:1});
-M('lithostitched','Lithostitched','Bibliotecas','Base de geração de mundo para Tectonic e outros.','',10,0,0,'BCD',{lib:1});
-M('patchouli','Patchouli','Bibliotecas','Livros-guia dentro do jogo (Botania, Hex Casting etc.).','',12,0,0,'ABCD',{lib:1});
-M('playeranimator','PlayerAnimator','Bibliotecas','Animações de jogador para combate e emotes.','',10,0,0,'ABCD',{lib:1});
-M('malilib','MaLiLib','Bibliotecas','Base do Litematica e ferramentas relacionadas.','',12,0,0,'ABCD',{lib:1,nofapi:1});
-M('moonlight','Moonlight Lib','Bibliotecas','Base do Supplementaries.','',20,0,0,'ABC',{lib:1});
-M('balm','Balm','Bibliotecas','Base do Waystones e de outros mods da BlayTheNinth.','',8,0,0,'ABC',{lib:1});
-M('spellengine','Spell Engine','Bibliotecas','Sistema de magias da série RPG (Wizards, Paladins & Priests).','',60,1,2,'AB',{lib:1,dep:['fabric-api','playeranimator']});
-/* Interface & QoL */
-M('modmenu','Mod Menu','Interface & QoL','Lista de mods e acesso às configurações.','qo1',8,0,0,'ABCDE',{core:1});
-M('emi','EMI','Interface & QoL','Receitas e inventário de itens, moderno e rápido.','qo3',100,1,0,'ABCDE',{grp:'recipes'});
-M('jei','Just Enough Items','Interface & QoL','Receitas e lista de itens, o clássico.','qo3',90,1,0,'ABCD',{grp:'recipes'});
-M('rei','Roughly Enough Items','Interface & QoL','Receitas e itens com visual limpo.','qo3',85,1,0,'ABC',{grp:'recipes',dep:['fabric-api','cloth-config','architectury']});
-M('jade','Jade','Interface & QoL','Mostra informações do bloco ou entidade que você mira.','qo2',15,0,0,'ABCDE',{grp:'tooltip'});
-M('wthit','WTHIT','Interface & QoL','Alternativa ao Jade para informação ao mirar.','qo2',15,0,0,'ABCD',{grp:'tooltip'});
-M('appleskin','AppleSkin','Interface & QoL','Mostra saturação e fome restauradas por cada comida.','qo1 su1',3,0,0,'ABCDE');
-M('ipn','Inventory Profiles Next','Interface & QoL','Ordenação e movimentação rápida de inventário.','qo3',20,0.5,1,'ABC');
-M('mousetweaks','Mouse Tweaks','Interface & QoL','Arrastar e espalhar itens com o mouse.','qo2',2,0,0,'ABCD');
-M('controlify','Controlify','Interface & QoL','Suporte a controle com interface adaptada.','qo1',25,0.5,0,'BCDE',{dep:['fabric-api','yacl']});
-M('zoomify','Zoomify','Interface & QoL','Zoom configurável.','qo1',5,0,0,'ABCD',{dep:['fabric-api','yacl']});
-M('nochatreports','No Chat Reports','Interface & QoL','Remove a assinatura criptográfica do chat.','qo1',3,0,0,'ABCD');
-M('shulkertooltip','Shulker Box Tooltip','Interface & QoL','Vê o conteúdo de shulkers sem abrir.','qo1',5,0,0,'ABCD');
-M('paginatedadv','Paginated Advancements','Interface & QoL','Tela de conquistas paginada e fluida.','qo1 ex1',3,0,0,'ABCD');
-M('enchdesc','Enchantment Descriptions','Interface & QoL','Descrições de encantamentos nos itens.','qo1',6,0,0,'ABCD');
-/* Mapas & Navegação */
-M('xaerominimap','Xaero’s Minimap','Mapas & Navegação','Minimapa leve com waypoints e radar.','qo2 ex1',40,1,0,'ABCDE',{grp:'minimap'});
-M('xaeroworldmap','Xaero’s World Map','Mapas & Navegação','Mapa do mundo explorado em tela cheia.','qo2 ex2',100,1,0,'ABCDE');
-M('journeymap','JourneyMap','Mapas & Navegação','Minimapa e mapa completo com waypoints e marcadores.','qo2 ex1',160,1.5,0,'ABCDE',{grp:'minimap'});
-M('naturescompass','Nature’s Compass','Mapas & Navegação','Bússola que localiza biomas.','ex2 qo1',5,0,1,'ABC');
-M('explorerscompass','Explorer’s Compass','Mapas & Navegação','Bússola que localiza estruturas.','ex2 qo1',5,0,1,'ABC');
-M('waystones','Waystones','Mapas & Navegação','Rede de teleporte com pedras de viagem.','qo2 ex1',15,0.3,2,'ABC',{dep:['fabric-api','balm']});
-/* Visual & Som */
-M('iris','Iris Shaders','Visual & Som','Suporte a shaders compatível com o Sodium.','vi2',80,1,1,'ABCDE',{dep:['sodium','fabric-api'],note:'Exige Sodium na versão compatível.'});
-M('shaders','Pacote de shaders (ex.: Complementary)','Visual & Som','Iluminação, sombras e água avançadas; pesa na GPU, pouco na RAM.','vi3',150,9,2,'ABCDE',{dep:['iris'],gpu:1});
-M('distanthorizons','Distant Horizons','Visual & Som','Renderiza o mundo muito além da distância de chunks usando LODs.','vi2 ex1',600,7,1,'ABCDE',{heavy:1,nofapi:1,grp:'farview',note:'Pesa em 4 GB; limite threads e qualidade de LOD.'});
-M('bobby','Bobby','Visual & Som','Guarda chunks vistos para estender a distância visual no cliente.','vi1',80,1,0,'ABCD',{grp:'farview'});
-M('continuity','Continuity','Visual & Som','Texturas conectadas (CTM) para resource packs.','vi2',40,0.5,0,'ABCD');
-M('lambdynlights','LambDynamicLights','Visual & Som','Luz dinâmica ao segurar tochas e itens brilhantes.','vi2',5,1.5,0,'ABCD');
-M('nea','Not Enough Animations','Visual & Som','Animações de primeira e terceira pessoa mais fluidas.','vi2',15,1,1,'ABCD');
-M('fallingleaves','Falling Leaves','Visual & Som','Folhas caindo das árvores.','vi2',5,1,0,'ABCD');
-M('presencefootsteps','Presence Footsteps','Visual & Som','Passos realistas por tipo de superfície.','vi2',20,0.5,0,'ABCD');
-M('soundphysics','Sound Physics Remastered','Visual & Som','Reverberação e abafamento de som conforme o ambiente.','vi2',15,1.5,0,'ABCD');
-M('visuality','Visuality','Visual & Som','Partículas sutis ao interagir com o mundo.','vi2',8,1,0,'BC');
-M('betterthirdperson','Better Third Person','Visual & Som','Câmera de terceira pessoa estilo ação.','vi1 cb1',8,0.3,1,'ABC');
-M('skinlayers','Skin Layers 3D','Visual & Som','Camadas de skin em 3D.','vi1',10,0.5,0,'ABCD');
-M('immersiveweathering','Immersive Weathering','Visual & Som','Envelhecimento de blocos: musgo, ferrugem, gelo.','vi2 su1',50,1,2,'ABC');
-/* Mundo & Estruturas */
-M('terralith','Terralith','Mundo & Estruturas','Mais de 100 biomas e terreno espetacular mantendo o clima vanilla.','ex2 vi3',60,2,2,'ABCD',{con:['wwoo']});
-M('tectonic','Tectonic','Mundo & Estruturas','Relevo dramático: montanhas altas, oceanos fundos, rios.','ex2 vi3',40,2.5,2,'ABCD',{dep:['fabric-api','lithostitched'],con:['wwoo']});
-M('wwoo','William Wythers’ Overhauled Overworld','Mundo & Estruturas','Reformula biomas e geração do Overworld.','ex2 vi3',40,2,3,'AB',{con:['terralith','tectonic']});
-M('naturesspirit','Nature’s Spirit','Mundo & Estruturas','Biomas, árvores e criaturas novas no estilo vanilla.','ex2 vi2 cr1',80,1.5,2,'ABC');
-M('betterend','BetterEnd','Mundo & Estruturas','Refaz o End: biomas, estruturas e progressão.','ex3 vi2',150,3,3,'ABC');
-M('betternether','BetterNether','Mundo & Estruturas','Refaz o Nether: biomas, itens e plantas novas.','ex3 vi2',120,3,3,'ABC');
-M('repurposed','Repurposed Structures','Mundo & Estruturas','Variantes de estruturas vanilla por bioma.','ex2 vi1',50,1,1,'ABCD');
-M('bdungeons','YUNG’s Better Dungeons','Mundo & Estruturas','Dungeons maiores, variadas e com chefes.','ex2 cb1',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
-M('bmineshafts','YUNG’s Better Mineshafts','Mundo & Estruturas','Minas abandonadas redesenhadas.','ex2',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
-M('bstrongholds','YUNG’s Better Strongholds','Mundo & Estruturas','Fortalezas subterrâneas redesenhadas.','ex2',10,0.5,1,'ABC',{dep:['fabric-api','yung-api']});
-M('bdeserttemples','YUNG’s Better Desert Temples','Mundo & Estruturas','Templos do deserto com armadilhas e salas novas.','ex2',10,0.3,1,'ABC',{dep:['fabric-api','yung-api']});
-M('boceanmonuments','YUNG’s Better Ocean Monuments','Mundo & Estruturas','Monumentos oceânicos maiores e mais variados.','ex2',10,0.3,1,'ABC',{dep:['fabric-api','yung-api']});
-M('whendungeonsarise','When Dungeons Arise','Mundo & Estruturas','Estruturas gigantes: castelos, fortalezas e navios.','ex3 cb1',70,1,2,'ABC');
-M('dungeonstaverns','Dungeons and Taverns','Mundo & Estruturas','Dezenas de estruturas pequenas e médias, estilo vanilla.','ex2',20,0.5,1,'ABCD');
-M('ctov','ChoiceTheorem’s Overhauled Village','Mundo & Estruturas','Vilas variadas por bioma.','ex2 co1',30,1,1,'ABC');
-/* Aventura & Combate */
-M('bettercombat','Better Combat','Aventura & Combate','Golpes com animação, alcance e arco de ataque por arma.','cb3',30,1,2,'ABCD',{dep:['fabric-api','playeranimator','cloth-config']});
-M('wizards','Wizards (RPG Series)','Aventura & Combate','Classe de mago: cajados, magias e armaduras.','ma2 cb2',80,1,3,'AB',{dep:['fabric-api','spellengine']});
-M('paladins','Paladins & Priests (RPG Series)','Aventura & Combate','Classes de paladino e sacerdote com magias de apoio.','cb2 ma1',80,1,3,'AB',{dep:['fabric-api','spellengine']});
-M('archers','Archers (RPG Series)','Aventura & Combate','Arqueiros: arcos com habilidades e armaduras.','cb2',60,1,2,'AB');
-M('bomd','Bosses of Mass Destruction','Aventura & Combate','Chefes com mecânicas elaboradas e estruturas próprias.','ex3 cb3',90,1.5,2,'A');
-M('friendsfoes','Friends & Foes','Aventura & Combate','Mobs novos no espírito dos votados no Minecraft Live.','cr1 ex1',35,0.5,1,'ABC');
-M('mythicmetals','Mythic Metals','Aventura & Combate','Dezenas de metais, ferramentas e armaduras novas.','cb2 ex1',30,0.3,2,'AB');
-/* Tecnologia */
-M('create','Create','Tecnologia','Máquinas mecânicas animadas, correias, trens e automação criativa.','te3 co2 su1',280,3.5,3,'A',{note:'Versão Fabric (Fabricators of Create).'});
-M('createrails','Create: Steam ’n’ Rails','Tecnologia','Trens a vapor, trilhos e sinalização para o Create.','te2 ex1',60,1,2,'A',{dep:['fabric-api','create']});
-M('techreborn','Tech Reborn','Tecnologia','Indústria clássica: geradores, máquinas e energia.','te3',120,2,3,'ABC');
-M('modernindustrialization','Modern Industrialization','Tecnologia','Indústria modular com multiblocos e progressão longa.','te3 su1',200,3,3,'ABCD');
-M('ae2','Applied Energistics 2','Tecnologia','Armazenamento digital em rede e logística de itens.','te3 qo2',160,3,3,'A',{note:'Na linha Fabric só existe build para 1.20.1; da 1.21 em diante é NeoForge.'});
-M('adastra','Ad Astra','Tecnologia','Foguetes, planetas e exploração espacial.','te2 ex3',150,2,3,'AB',{dep:['fabric-api','architectury','geckolib']});
-M('tomssimple','Tom’s Simple Storage','Tecnologia','Armazenamento em rede simples e visual.','te2 qo2',40,0.5,2,'AB');
-M('immersiveaircraft','Immersive Aircraft','Tecnologia','Aviões, helicópteros e dirigíveis pilotáveis.','te1 ex2',70,1.5,2,'ABCD');
-/* Magia */
-M('botania','Botania','Magia','Magia botânica: flores geradoras, mana e automação natural.','ma3 te1 su1',180,2,3,'ABC',{dep:['fabric-api','patchouli']});
-M('hexcasting','Hex Casting','Magia','Magia programável com padrões de glifos.','ma3 te1',60,1,3,'AB',{dep:['fabric-api','patchouli']});
-M('spectrum','Spectrum','Magia','Magia de cristais, progressão longa e mundo próprio.','ma3 ex2',160,2,3,'AB',{dep:['fabric-api','patchouli']});
-/* Sobrevivência */
-M('dehydration','Dehydration','Sobrevivência','Sistema de sede com água limpa, suja e purificação.','su2',10,0.3,2,'ABC');
-M('fabricseasons','Fabric Seasons','Sobrevivência','Estações do ano afetam clima, plantas e temperatura.','su2 vi2',25,1,2,'ABC');
-M('universalgraves','Universal Graves','Sobrevivência','Túmulo com seus itens ao morrer.','su1 qo1',8,0,1,'ABCD');
-/* Comida & Fazenda */
-M('farmersdelight','Farmer’s Delight (Refabricated)','Comida & Fazenda','Agricultura e culinária expandidas, com estética vanilla-friendly.','cr2 su1',40,0.5,2,'ABCD');
-M('croptopia','Croptopia','Comida & Fazenda','Dezenas de culturas, árvores frutíferas e receitas.','cr2 su1',55,0.5,2,'ABCD');
-/* Criaturas */
-M('cobblemon','Cobblemon','Criaturas','Capture, treine e batalhe com Pokémon no Minecraft.','cr3 ex2 cb2',420,4,3,'ABC',{heavy:1,dep:['fabric-api','architectury'],note:'Pesado em 4 GB; use distância de renderização baixa.'});
-M('naturalist','Naturalist','Criaturas','Fauna nova e interativa: ursos, veados, borboletas.','cr2 ex1',40,0.5,1,'ABC',{dep:['fabric-api','geckolib']});
-M('species','Species','Criaturas','Criaturas, estruturas e itens novos com identidade própria.','cr2 ex1',45,0.5,2,'AB',{dep:['fabric-api','geckolib']});
-/* Construção */
-M('chipped','Chipped','Construção','Milhares de variações de blocos decorativos.','co3 vi1',40,0.3,1,'ABC');
-M('handcrafted','Handcrafted','Construção','Mobília e decoração com visual vanilla.','co3',50,0.3,1,'ABC',{dep:['fabric-api','architectury']});
-M('supplementaries','Supplementaries','Construção','Dezenas de blocos e itens utilitários e decorativos.','co3 qo2',70,0.5,2,'ABC',{dep:['fabric-api','moonlight']});
-M('worldedit','WorldEdit','Construção','Edição de grandes áreas por comando.','co3 qo1',25,0,1,'ABCD');
-M('litematica','Litematica','Construção','Projeções de construção em tela, com lista de materiais.','co3 qo2',40,0.5,1,'ABCD',{dep:['fabric-api','malilib']});
+/* O catálogo vive em data/mods.js (gerado por tools/verify.mjs a partir do Modrinth) */
+(function(){
+  var D=window.FORJA_DATA;
+  if(!D||!D.mods){document.addEventListener('DOMContentLoaded',function(){var v=document.getElementById('view');if(v)v.innerHTML='<div class="empty"><p><b>Catálogo não encontrado.</b></p><p>O arquivo data/mods.js não foi carregado. Mantenha a pasta data/ ao lado do index.html.</p></div>'});D={mods:[],generated:''}}
+  D.mods.forEach(function(o){
+    var a={};(o.aff||'').split(' ').filter(Boolean).forEach(function(x){a[x.slice(0,2)]=+x.slice(2)});
+    var m={id:o.id,name:o.name,cat:o.cat,sub:o.sub||'',desc:o.desc,a:a,ram:o.ram,cpu:o.cpu,inv:o.inv,ver:o.ver,
+      dep:o.dep||[],dt:o.dt||null,grp:o.grp||null,core:!!o.core,fragile:!!o.fragile,lib:!!o.lib,gpu:!!o.gpu,heavy:!!o.heavy,
+      note:o.note||'',con:(o.con||[]).slice(),slug:o.slug||'',dl:o.dl||0,upd:o.upd||''};
+    MODS.push(m);BY[m.id]=m;
+  });
+  /* conflitos valem nos dois sentidos */
+  MODS.forEach(function(m){m.con.forEach(function(c){var o=BY[c];if(o&&o.con.indexOf(m.id)<0)o.con.push(m.id)})});
+})();
+var DATA_DATE=(window.FORJA_DATA&&window.FORJA_DATA.generated)||'';
+/* dependências podem mudar de uma versão do Minecraft para outra */
+function depsOf(m,t){return (t&&m.dt&&m.dt[t])||m.dep}
 
 /* ============ ESTADO ============ */
 var KEY='forja-modpack-v1';
@@ -439,7 +330,7 @@ function score(ids,t,lite){
   var set={},mods=[];
   ids.forEach(function(i){var m=BY[i];if(m&&!set[i]){set[i]=1;mods.push(m)}});
   var n=mods.length,V=VT[t],H=S.heap*1024;
-  var used={};mods.forEach(function(m){m.dep.forEach(function(d){used[d]=1})});
+  var used={};mods.forEach(function(m){depsOf(m,t).forEach(function(d){used[d]=1})});
   var orph=mods.filter(function(m){return m.lib&&m.id!=='fabric-api'&&!used[m.id]});
   var r={n:n,t:t,v:V,issues:[],crit:{al:0,fo:0,pf:0,es:0,sc:0,fu:0},notes:{al:[],fo:[],pf:[],es:[],sc:[],fu:[]},Pd:{},total:0,ram:1300,load:0,heap:H,ratio:1300/H,empty:n===0};
   DIMS.forEach(function(d){r.Pd[d.k]=0});
@@ -491,7 +382,7 @@ function score(ids,t,lite){
   /* Estabilidade */
   var est=100,missing={},unavail=[],conf=[],groups={},frag=[];
   mods.forEach(function(m){
-    m.dep.forEach(function(d){if(!set[d]){(missing[d]=missing[d]||[]).push(m)}});
+    depsOf(m,t).forEach(function(d){if(!set[d]){(missing[d]=missing[d]||[]).push(m)}});
     if(m.ver.indexOf(t)<0)unavail.push(m);
     m.con.forEach(function(c){if(set[c]&&m.id<c)conf.push([m,BY[c]])});
     if(m.grp)(groups[m.grp]=groups[m.grp]||[]).push(m);
@@ -556,7 +447,7 @@ function tierLabel(x){
 }
 function withDeps(id,t,ids){
   var add=[],seen={};ids.forEach(function(i){seen[i]=1});var ok=true;
-  (function go(i){if(seen[i])return;var m=BY[i];if(!m||m.ver.indexOf(t)<0){ok=false;return}seen[i]=1;m.dep.forEach(go);add.push(i)})(id);
+  (function go(i){if(seen[i])return;var m=BY[i];if(!m||m.ver.indexOf(t)<0){ok=false;return}seen[i]=1;depsOf(m,t).forEach(go);add.push(i)})(id);
   return ok?add:null;
 }
 function bestAdds(ids,t,limit){
@@ -581,7 +472,7 @@ function autoBuild(t,start){
 function removeCandidates(ids,t){
   var base=score(ids,t,true),out=[];
   ids.forEach(function(id){
-    var needed=ids.some(function(o){return o!==id&&BY[o]&&BY[o].dep.indexOf(id)>=0});
+    var needed=ids.some(function(o){return o!==id&&BY[o]&&depsOf(BY[o],t).indexOf(id)>=0});
     if(needed)return;
     var r=score(ids.filter(function(x){return x!==id}),t,true);
     out.push({m:BY[id],gain:r.total-base.total,r:r});
@@ -610,7 +501,7 @@ function computeVersions(){
 function addMod(id){
   if(S.pack.indexOf(id)>=0)return;
   var t=recT(),add=[],seen={};S.pack.forEach(function(i){seen[i]=1});
-  (function go(i){if(seen[i]||!BY[i])return;seen[i]=1;BY[i].dep.forEach(go);add.push(i)})(id);
+  (function go(i){if(seen[i]||!BY[i])return;seen[i]=1;depsOf(BY[i],t).forEach(go);add.push(i)})(id);
   S.ban=S.ban.filter(function(b){return add.indexOf(b)<0});
   S.pack=S.pack.concat(add);
   if(add.length>1)toast('Adicionado '+BY[id].name+' + '+(add.length-1)+' dependência(s).');
@@ -771,7 +662,8 @@ function card(m){
   if(m.fragile)tags+='<span class="tag warn">experimental</span>';
   if(m.inv>=3)tags+='<span class="tag">overhaul</span>';
   if(m.grp)tags+='<span class="tag">'+esc(GR[m.grp])+'</span>';
-  if(m.dep.length&&m.dep.some(function(d){return d!=='fabric-api'}))tags+='<span class="tag">exige: '+esc(m.dep.filter(function(d){return d!=='fabric-api'}).map(function(d){return BY[d]?BY[d].name:d}).join(', '))+'</span>';
+  var dps=depsOf(m,cur.t).filter(function(d){return d!=='fabric-api'});
+  if(dps.length)tags+='<span class="tag">exige: '+esc(dps.slice(0,4).map(function(d){return BY[d]?BY[d].name:d}).join(', '))+(dps.length>4?' +'+(dps.length-4):'')+'</span>';
   var fitH=f==null?'<div class="fit">Base<div class="meter"><i style="width:0"></i></div></div>':'<div class="fit"><b>'+Math.round(f*100)+'%</b> encaixe<div class="meter"><i style="width:'+Math.round(f*100)+'%"></i></div></div>';
   var cost='RAM '+(m.ram>0?'+':'')+m.ram+' MB<br>CPU '+(m.cpu>0?'+':'')+fmt(m.cpu,1);
   var vts='<div class="vts">'+VERS.map(function(v){return '<i class="vt'+(m.ver.indexOf(v.t)>=0?' on':'')+(cur.t===v.t?' cur':'')+'">'+v.id+'</i>'}).join('')+'</div>';
@@ -937,10 +829,10 @@ function dl(name,text,mime){
 var NAMEIDX=null;
 function normName(x){return norm(x).replace(/[’'`´]/g,'').replace(/[^a-z0-9]+/g,'')}
 function nameIdx(){if(!NAMEIDX){NAMEIDX={};MODS.forEach(function(m){NAMEIDX[normName(m.name)]=m.id;NAMEIDX[normName(m.id)]=m.id})}return NAMEIDX}
-function missingDeps(ids){var set={},out=[];ids.forEach(function(i){set[i]=1});ids.forEach(function(i){BY[i].dep.forEach(function(d){if(!set[d]&&BY[d]&&out.indexOf(BY[d].name)<0)out.push(BY[d].name)})});return out}
+function missingDeps(ids){var set={},out=[];ids.forEach(function(i){set[i]=1});var t=recT();ids.forEach(function(i){depsOf(BY[i],t).forEach(function(d){if(!set[d]&&BY[d]&&out.indexOf(BY[d].name)<0)out.push(BY[d].name)})});return out}
 function withAllDeps(ids){
   var out=ids.slice(),seen={};out.forEach(function(i){seen[i]=1});
-  for(var q=0;q<out.length;q++){BY[out[q]].dep.forEach(function(d){if(!seen[d]&&BY[d]){seen[d]=1;out.push(d)}})}
+  var t=recT();for(var q=0;q<out.length;q++){depsOf(BY[out[q]],t).forEach(function(d){if(!seen[d]&&BY[d]){seen[d]=1;out.push(d)}})}
   return out;
 }
 function parseImport(text){
@@ -1056,7 +948,7 @@ function vFiles(){
 
 /* ============ VERIFICAÇÃO AO VIVO (Modrinth) ============ */
 var API='https://api.modrinth.com/v2',LKEY='forja-live-v1';
-var GVMAP={A:['1.20.1'],B:['1.21.1'],C:['1.21.11'],D:['26.1','26.1.1','26.1.2'],E:['26.2']};
+var GVMAP={A:['1.20.1'],B:['1.21.1'],C:['1.21.11'],D:['26.1','26.1.1','26.1.2'],E:['26.2'],F:['26.3']};
 var QOVR={create:'Create Fabric',createrails:'Create: Steam ’n’ Rails',rei:'Roughly Enough Items',jei:'Just Enough Items',spark:'spark',wizards:'Wizards (RPG Series)',paladins:'Paladins & Priests (RPG Series)',archers:'Archers (RPG Series)',ctov:'ChoiceTheorem’s Overhauled Village',iris:'Iris Shaders'};
 var NOLIVE={shaders:1};
 var NET=!window.claude;
