@@ -101,7 +101,7 @@ input[type=range]{width:100%;accent-color:var(--lapis);height:28px}
 .insight p{margin:.25em 0}
 
 /* catálogo */
-.filters{display:grid;grid-template-columns:1.4fr 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.filters{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
 .togs{display:flex;flex-wrap:wrap;gap:14px;font-size:.88rem;color:var(--muted);margin-bottom:12px}
 .togs label{display:flex;gap:6px;align-items:center}
 .mrow{display:grid;grid-template-columns:minmax(210px,1.6fr) 96px 110px 200px 168px;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line)}
@@ -197,6 +197,107 @@ summary{cursor:pointer;font-weight:600}
 .gaprow:last-child{border-bottom:0}
 .gaph{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .swap{color:var(--lapis);font-weight:700}
+
+.ghead{position:sticky;top:var(--stick,150px);z-index:5;background:var(--bg);margin:18px 0 0;padding:8px 4px;border-bottom:2px solid var(--line);font:700 1.05rem var(--head);color:var(--text)}
+.ghead span{font:600 .8rem var(--body);color:var(--muted);margin-left:8px}
+.ico{image-rendering:pixelated;width:28px;height:28px;margin-right:9px;vertical-align:-8px;border-radius:3px;box-shadow:0 2px 0 var(--bevel)}
+.mname .nm{vertical-align:middle}
+.dl,.upd{color:var(--muted);font-size:.74rem}
+.upd{display:block;margin:2px 0}
+
+/* ============ FX (animação) ============ */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+main{position:relative;z-index:1}
+#fxbg{position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+#fxblocks{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.fxblk{position:absolute;image-rendering:pixelated;will-change:transform;border-radius:2px;box-shadow:0 6px 0 var(--shadow)}
+@media (max-width:1180px){.fxblk:nth-child(n+4){display:none}}
+@media (max-width:760px){#fxblocks{display:none}}
+#fxprog{position:fixed;left:0;right:0;top:0;height:4px;z-index:60;pointer-events:none}
+#fxprog i{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--xp) 0 10px,var(--xp2) 10px 12px);transform-origin:0 50%;transform:scaleX(0)}
+.top .wrap{transition:padding .3s ease}
+.lvl{transition:font-size .3s ease}
+body.shrunk .top .wrap{padding-top:4px;padding-bottom:4px}
+body.shrunk .brand small,body.shrunk .verdict{display:none}
+body.shrunk .lvl{font-size:1.45rem;min-height:1.45rem}
+body.shrunk .xpbar{margin:2px auto}
+.tabs .wrap{position:relative}
+#tabs{position:relative}
+.tabind{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--lapis);box-shadow:0 0 12px var(--lapis);pointer-events:none}
+html:not(.fx) .tabind{display:none}
+html.fx .tab[aria-selected="true"]{border-bottom-color:transparent}
+.tab{transition:color .2s}
+.tab:hover{color:var(--text)}
+html.fx #toast{transition:none;opacity:0;transform:none;left:50%}
+.xp{position:relative}
+.xpd{position:absolute;left:calc(50% + 52px);top:2px;font:700 1.05rem var(--head);pointer-events:none;text-shadow:2px 2px 0 var(--shadow)}
+.xpd.up{color:var(--xp)}
+.xpd.down{color:var(--red)}
+.fxfly{position:fixed;left:0;top:0;width:34px;height:34px;image-rendering:pixelated;z-index:90;pointer-events:none;border-radius:3px;box-shadow:0 3px 0 #0005}
+.fxsp{position:fixed;left:0;top:0;z-index:90;pointer-events:none;display:block}
+.fxorb{position:fixed;left:0;top:0;width:11px;height:11px;margin:-5px 0 0 -5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f3ffc9,#8cf03e 55%,#4ec60c);box-shadow:0 0 10px #8cf03e;z-index:90;pointer-events:none}
+#fxtop{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;width:46px;height:46px;border:2px solid var(--line);background:var(--panel);color:var(--text);border-radius:4px;box-shadow:0 3px 0 var(--bevel);display:grid;place-items:center}
+#fxtop:hover{background:var(--lapis);color:#fff;border-color:var(--lapis)}
+/* sliders pixelados com preenchimento */
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:10px;background:linear-gradient(90deg,var(--lapis) var(--p),var(--seg) var(--p));border:2px solid var(--bevel)}
+input[type=range]::-moz-range-track{height:6px;background:linear-gradient(90deg,var(--lapis) var(--p),var(--seg) var(--p));border:2px solid var(--bevel)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:24px;margin-top:-9px;background:var(--gold);border:2px solid var(--text);border-radius:2px;box-shadow:0 2px 0 var(--shadow)}
+input[type=range]::-moz-range-thumb{width:12px;height:20px;background:var(--gold);border:2px solid var(--text);border-radius:2px;box-shadow:0 2px 0 var(--shadow)}
+.slrow output{display:inline-block;transform-origin:100% 50%}
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:center;margin:0 0 30px;padding:30px 4px 6px;min-height:330px}
+.eyebrow{font:600 .78rem var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin:0 0 10px}
+.hero-title{font:700 clamp(2.4rem,6.2vw,4.3rem)/1.02 var(--head);margin:0 0 14px;text-shadow:3px 3px 0 var(--shadow)}
+.hero-title .w{display:inline-block;white-space:nowrap}
+.hero-title .ch{display:inline-block}
+.hero-sub{font-size:1.08rem;color:var(--muted);max-width:52ch;margin:0 0 22px}
+.hero-stats{display:flex;flex-wrap:wrap;gap:14px 30px}
+.hero-stats b{display:block;font:700 1.75rem var(--head);color:var(--lapis)}
+.hero-stats span{font-size:.78rem;color:var(--muted)}
+.hero-art{position:relative;height:300px;display:flex;align-items:flex-end;justify-content:center}
+.hero-art .anvil{width:min(330px,86%);filter:drop-shadow(0 10px 0 var(--shadow))}
+.hero-art .anvil svg{display:block;width:100%;height:auto}
+.hero-art .hammer{position:absolute;width:118px;left:30%;bottom:118px}
+.hero-art .hammer svg{display:block;width:100%;height:auto}
+.hero-art .glow{position:absolute;left:34%;bottom:122px;width:170px;height:70px;background:radial-gradient(closest-side,#ffd35a,#ff9a2e77 55%,transparent);opacity:0;filter:blur(8px)}
+.hero-art .sparks{position:absolute;left:46%;bottom:150px;width:0;height:0}
+.hero-art .sp{position:absolute;left:0;top:0;display:block}
+/* mesa de forja */
+.craft{display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;padding:6px 0 2px}
+.grid3{display:grid;grid-template-columns:repeat(3,66px);grid-template-rows:repeat(3,66px);gap:4px;background:#c6c6c6;padding:8px;border:3px solid;border-color:#fff #555 #555 #fff;box-shadow:0 4px 0 var(--shadow)}
+.slot{display:grid;place-items:center;padding:0;background:#8b8b8b;border:2px solid;border-color:#373737 #fff #fff #373737;border-radius:0}
+.slot img{width:44px;height:44px;image-rendering:pixelated;transition:transform .2s}
+.slot:hover img{transform:scale(1.12) rotate(-4deg)}
+.slot.empty{cursor:pointer;opacity:.7}
+.slot.empty:hover{background:#9a9a9a}
+.craft .arrow{font-size:2.6rem;color:var(--muted)}
+.result{position:relative;width:150px;padding:14px 8px 12px;text-align:center;background:#8b8b8b;border:3px solid;border-color:#373737 #fff #fff #373737;overflow:hidden;box-shadow:0 4px 0 var(--shadow)}
+.result b{display:block;font:700 3.2rem/1 var(--head);color:#fff;text-shadow:3px 3px 0 #3f3f3f}
+.result span{display:block;margin-top:6px;font-size:.72rem;color:#1b1b1b;line-height:1.25}
+.result .glint{position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,#ffffff99 50%,transparent 62%);background-size:260% 100%;animation:glint 3.6s linear infinite;pointer-events:none}
+@keyframes glint{from{background-position:160% 0}to{background-position:-110% 0}}
+.result.uncommon{box-shadow:0 0 0 3px #4fd25a,0 0 22px #4fd25a77,0 4px 0 var(--shadow)}
+.result.rare{box-shadow:0 0 0 3px #4ea1ff,0 0 24px #4ea1ff88,0 4px 0 var(--shadow)}
+.result.epic{box-shadow:0 0 0 3px #b06bff,0 0 30px #b06bffaa,0 4px 0 var(--shadow)}
+/* trilha de versões */
+.vrail{position:relative;display:flex;justify-content:space-between;gap:6px;padding:14px 4px 16px;margin:2px 0 12px}
+.vrail .vline{position:absolute;left:8%;right:8%;top:49px;height:5px;background:var(--seg)}
+.vrail .vline i{display:block;height:100%;background:linear-gradient(90deg,var(--xp),var(--xp2));transform-origin:0 50%}
+.vnode{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0}
+.vnode .orb{display:grid;place-items:center;width:max(38px,calc(38px + (var(--s) - 60) * .5px));height:max(38px,calc(38px + (var(--s) - 60) * .5px));margin-top:-2px;background:var(--panel);border:3px solid var(--line);border-radius:4px;box-shadow:0 3px 0 var(--bevel)}
+.vnode .orb b{font:700 1rem var(--head)}
+.vnode span{font-weight:700;font-size:.9rem}
+.vnode small{color:var(--muted);font-size:.72rem}
+.vnode.best .orb{border-color:var(--xp);animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #3c9a0f66,0 3px 0 var(--bevel)}50%{box-shadow:0 0 0 7px #3c9a0f00,0 0 18px #79cf3699,0 3px 0 var(--bevel)}}
+/* cartões do catálogo */
+.mrow{transition:background .2s,box-shadow .2s}
+html.fx .mrow:hover .ico{animation:wig .5s ease}
+@keyframes wig{0%{transform:rotate(0)}25%{transform:rotate(-9deg) scale(1.08)}60%{transform:rotate(7deg) scale(1.08)}100%{transform:rotate(0)}}
+.btn{transition:filter .15s,transform .08s,box-shadow .08s}
 @media (max-width:860px){
   .top .wrap{grid-template-columns:1fr;gap:8px}
   .chips{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
@@ -205,6 +306,11 @@ summary{cursor:pointer;font-weight:600}
   .xpbar{margin:3px auto}
   .brand svg{width:30px;height:30px}
   .grid2,.scoregrid{grid-template-columns:1fr}
+  .hero{grid-template-columns:1fr;min-height:0;padding-top:14px}
+  .hero-art{height:230px;order:-1}
+  .hero-art .hammer{width:92px;bottom:92px}
+  .grid3{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px)}
+  .slot img{width:38px;height:38px}
   .slrow{grid-template-columns:1fr 60px;row-gap:2px}
   .slrow label{grid-column:1 / -1}
   .filters{grid-template-columns:1fr}
@@ -244,6 +350,12 @@ summary{cursor:pointer;font-weight:600}
 <main><div class="wrap" id="view"></div></main>
 <div id="toast" role="status"></div>
 
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/ScrollToPlugin.min.js"></script>
+<script src="vendor/Flip.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="fx.js"></script>
 <script src="data/mods.js"></script>
 <script>
 (function(){
@@ -254,6 +366,10 @@ var clamp=function(x,a,b){return Math.max(a,Math.min(b,x))};
 var norm=function(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()};
 var fmt=function(x,d){return Number(x).toLocaleString('pt-BR',{maximumFractionDigits:d==null?1:d,minimumFractionDigits:0})};
 var clone=function(o){return JSON.parse(JSON.stringify(o))};
+/* animações são opcionais: sem GSAP ou com “reduzir movimento”, tudo funciona do mesmo jeito */
+function fxOn(){return !!(window.FX&&FX.ok&&!FX.reduced)}
+function fx(n){if(!fxOn()||!FX[n])return;try{return FX[n].apply(FX,[].slice.call(arguments,1))}catch(e){if(window.console)console.error(e)}}
+function scrollTop(){if(fxOn())fx('scrollTo',0,{immediate:true});else window.scrollTo({top:0,behavior:'auto'})}
 
 /* ============ DADOS ============ */
 var DIMS=[
@@ -316,7 +432,7 @@ function load(){try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null}
 function persist(){try{S.done=(S.done||[]).filter(function(i){return S.pack.indexOf(i)>=0});localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var S=(function(){var l=load(),d=clone(DEF);if(l&&typeof l==='object'){for(var k in l){if(k==='w'){for(var x in l.w){d.w[x]=l.w[x]}}else d[k]=l[k]}}
   d.pack=(d.pack||[]).filter(function(i){return BY[i]});d.ban=(d.ban||[]).filter(function(i){return BY[i]});return d})();
-var ui={tab:'goal',sugSort:'gain',sugTok:0,q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',ckPend:false,imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
+var ui={tab:'goal',sub:'all',showLibs:false,sugSort:'gain',sugTok:0,q:'',cat:'all',onlyAvail:true,hideBan:true,sort:'fit',ckPend:false,imp:{text:'',res:null},live:{running:false,done:0,total:0,err:'',ctl:null,cur:''},vkey:'',vres:null,exportText:'',theme:null};
 var cur=null,DL=null;
 
 /* ============ MOTOR DE PONTUAÇÃO ============ */
@@ -674,15 +790,16 @@ function addMod(id){
   if(add.length>1)toast('Adicionado '+BY[id].name+' + '+(add.length-1)+' dependência(s).');
 }
 function rmMod(id){S.pack=S.pack.filter(function(i){return i!==id})}
-function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show')},2600)}
+function toast(msg){var t=$('#toast');if(fxOn()){FX.toast(t,msg);return}t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show')},2600)}
 function commit(){
   persist();recompute();renderTop();renderTabs();
   if(ui.tab==='catalog')renderGrid();else renderView();
 }
 function applyPreset(id){
   var p=PRESETS.filter(function(x){return x.id===id})[0];if(!p)return;
+  var old=clone(S.w);old.vanilla=S.vanilla;old.fps=S.fps;old.size=S.size;
   S.w=clone(p.w);S.vanilla=p.vanilla;S.fps=p.fps;S.size=p.size;S.preset=id;
-  persist();recompute();renderTop();renderView();
+  persist();recompute();renderTop();renderView();fx('preset',old);
 }
 function copyText(txt,okMsg){
   function fallback(){ui.exportText=txt;renderView();var b=$('#exportBox');if(b){b.focus();b.select()}toast('Copie o texto da caixa abaixo.')}
@@ -724,28 +841,39 @@ function renderTop(){
    +'<span class="chip">Java '+c.v.java+'</span>';
   if(c.conf||c.miss)h+='<span class="chip err">'+(c.conf+c.miss)+' erro(s)</span>';
   $('#stats').innerHTML=h;
+  var nv=c.empty?0:c.total;fx('xp',ui.shown,nv,c.empty);ui.shown=nv;
+  if(ui.nShown!==c.n&&ui.nShown!=null)fx('chips');ui.nShown=c.n;
 }
 function renderTabs(){
   var T=[['goal','Objetivo'],['catalog','Catálogo'],['pack','Meu pack'],['check','Checklist'],['suggest','Sugestões'],['files','Exportar e importar']];
-  $('#tabs').innerHTML=T.map(function(t){
+  $('#tabs').innerHTML='<span class="tabind"></span>'+T.map(function(t){
     return '<button class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-id="'+t[0]+'">'+t[1]+(t[0]==='pack'&&S.pack.length?'<span class="n">'+S.pack.length+'</span>':'')+(t[0]==='check'&&S.pack.length?'<span class="n">'+S.done.filter(function(i){return S.pack.indexOf(i)>=0}).length+'/'+S.pack.length+'</span>':'')+'</button>';
   }).join('')+'<span style="flex:1"></span><button class="theme" data-act="theme" title="Alternar tema claro/escuro">Tema</button>';
+  fx('tabs');
 }
-function renderView(){
+function renderView(anim){
   var v=$('#view');
   var f={goal:vGoal,catalog:vCatalog,pack:vPack,check:vCheck,suggest:vSuggest,files:vFiles}[ui.tab];
   v.innerHTML=f();
-  if(ui.tab==='catalog')renderGrid();
+  fx('view',ui.tab,!!anim);
+  if(ui.tab==='catalog')renderGrid(anim);
   if(ui.tab==='suggest')afterSuggest();
   if(ui.tab==='files')renderImpPrev();
 }
+function swapView(){
+  var go=function(){renderView(true);scrollTop()};
+  if(fxOn()&&FX.swapOut)FX.swapOut(go);else go();
+}
 function slider(k,label,desc,val,min,max,step,unit){
   return '<div class="slrow"><label for="s_'+k+'"><b>'+label+'</b><span>'+desc+'</span></label>'
-   +'<input type="range" id="s_'+k+'" data-k="'+k+'" min="'+min+'" max="'+max+'" step="'+(step||1)+'" value="'+val+'">'
+   +'<input type="range" id="s_'+k+'" data-k="'+k+'" min="'+min+'" max="'+max+'" step="'+(step||1)+'" value="'+val+'" style="--p:'+((val-min)/(max-min)*100)+'%">'
    +'<output id="o_'+k+'">'+val+(unit||'')+'</output></div>';
 }
 function vGoal(){
-  var h='<h2>O que você quer jogar?</h2><p class="lead">Defina o objetivo uma vez. Toda nota, sugestão e recomendação de versão deriva dele, então vale ser honesto: pedir tudo ao mesmo tempo é o caminho mais curto para um pack sem identidade.</p>';
+  var nC=MODS.filter(function(m){return !m.lib}).length;
+  var h='<section class="hero" id="hero"><div class="hero-txt"><p class="eyebrow">Planejador de modpacks · Fabric</p><h1 class="hero-title" id="heroTitle">Forje o seu modpack</h1><p class="hero-sub">Diga o que você quer jogar. A Forja pontua o pack, aponta conflitos e sugere o que falta, com cada mod conferido no Modrinth.</p>'
+   +'<div class="hero-stats"><div><b data-count="'+nC+'">'+nC+'</b><span>mods verificados</span></div><div><b data-count="'+VERS.length+'">'+VERS.length+'</b><span>versões do Minecraft</span></div><div><b data-count="'+(CATS.length-1)+'">'+(CATS.length-1)+'</b><span>categorias de mods</span></div><div><b>'+esc(DATA_DATE||'—')+'</b><span>última verificação</span></div></div></div><div class="hero-art" id="heroArt" aria-hidden="true"></div></section>';
+  h+='<h2>O que você quer jogar?</h2><p class="lead">Defina o objetivo uma vez. Toda nota, sugestão e recomendação de versão deriva dele, então vale ser honesto: pedir tudo ao mesmo tempo é o caminho mais curto para um pack sem identidade.</p>';
   h+='<section class="block"><h3>Ponto de partida</h3><p class="sub">Escolha um perfil e ajuste os controles abaixo.</p><div class="row">';
   PRESETS.forEach(function(p){h+='<button class="pre'+(S.preset===p.id?' on':'')+'" data-act="preset" data-id="'+p.id+'" title="'+esc(p.d)+'">'+esc(p.n)+'</button>'});
   h+='</div>';
@@ -789,57 +917,101 @@ function renderInsight(){
   h+='<p><b>Orçamento de RAM:</b> cerca de '+fmt(bud,0)+' MB para mods (até 80% de '+S.heap+' GB, descontando ~1,3 GB do jogo base). Um mod de conteúdo custa ~'+fmt(avg,0)+' MB em média no catálogo; os de otimização devolvem memória.</p>';
   el.innerHTML=h;
 }
-function vCatalog(){
-  var h='<h2>Catálogo de mods</h2><p class="lead">Cada mod mostra o quanto encaixa no seu objetivo, o custo técnico e em quais versões existe build conhecida. Dependências entram sozinhas.</p>';
-  h+='<div class="filters"><input type="search" id="q" placeholder="Buscar por nome ou descrição" value="'+esc(ui.q)+'" aria-label="Buscar mods">'
-   +'<select id="fcat" aria-label="Categoria"><option value="all">Todas as categorias</option>'+CATS.map(function(c){return '<option'+(ui.cat===c?' selected':'')+'>'+c+'</option>'}).join('')+'</select>'
-   +'<select id="fsort" aria-label="Ordenar"><option value="fit"'+(ui.sort==='fit'?' selected':'')+'>Melhor encaixe</option><option value="ram"'+(ui.sort==='ram'?' selected':'')+'>Menor RAM</option><option value="name"'+(ui.sort==='name'?' selected':'')+'>Nome</option></select></div>';
-  h+='<div class="togs"><label><input type="checkbox" id="fav"'+(ui.onlyAvail?' checked':'')+'> Só mods com build na versão atual</label><label><input type="checkbox" id="fban"'+(ui.hideBan?' checked':'')+'> Ocultar descartados</label><span id="gcount"></span></div>';
-  h+='<div id="grid"></div>';
-  h+='<p class="foot">Versão usada nos filtros e no link de verificação: '+esc(cur.v.id)+(cur.auto?' (automática)':'')+'.</p>';
+function subsOf(cat){
+  var o={};MODS.forEach(function(m){if(m.sub&&(cat==='all'||m.cat===cat)&&(ui.showLibs||!m.lib))(o[m.cat]=o[m.cat]||{})[m.sub]=1});return o;
+}
+function subOptions(){
+  var by=subsOf(ui.cat),h='<option value="all">Todas as subcategorias</option>';
+  CATS.forEach(function(c){if(!by[c])return;var ks=Object.keys(by[c]).sort();
+    if(ui.cat==='all')h+='<optgroup label="'+esc(c)+'">'+ks.map(function(k){return '<option value="'+esc(c+'|'+k)+'"'+(ui.sub===c+'|'+k?' selected':'')+'>'+esc(k)+'</option>'}).join('')+'</optgroup>';
+    else h+=ks.map(function(k){return '<option value="'+esc(c+'|'+k)+'"'+(ui.sub===c+'|'+k?' selected':'')+'>'+esc(k)+'</option>'}).join('');
+  });
   return h;
 }
-function mrUrl(m){return 'https://modrinth.com/mods?q='+encodeURIComponent(m.name)+'&g=categories%3Afabric&v='+encodeURIComponent(cur.v.vq)}
-function renderGrid(){
+function vCatalog(){
+  var h='<h2>Catálogo de mods</h2><p class="lead">Cada mod mostra o que faz, o quanto encaixa no seu objetivo, o custo técnico e em quais versões existe build Fabric. Dependências entram sozinhas.</p>';
+  h+='<div class="filters"><input type="search" id="q" placeholder="Buscar por nome, função ou categoria" value="'+esc(ui.q)+'" aria-label="Buscar mods">'
+   +'<select id="fcat" aria-label="Categoria"><option value="all">Todas as categorias</option>'+CATS.map(function(c){return '<option'+(ui.cat===c?' selected':'')+'>'+c+'</option>'}).join('')+'</select>'
+   +'<select id="fsub" aria-label="Subcategoria">'+subOptions()+'</select>'
+   +'<select id="fsort" aria-label="Ordenar">'+[['fit','Melhor encaixe'],['pop','Mais populares'],['new','Atualizados há pouco'],['ram','Menor RAM'],['cat','Por categoria'],['name','Nome']].map(function(x){return '<option value="'+x[0]+'"'+(ui.sort===x[0]?' selected':'')+'>'+x[1]+'</option>'}).join('')+'</select></div>';
+  h+='<div class="togs"><label><input type="checkbox" id="fav"'+(ui.onlyAvail?' checked':'')+'> Só mods com build na versão atual</label><label><input type="checkbox" id="fban"'+(ui.hideBan?' checked':'')+'> Ocultar descartados</label><label><input type="checkbox" id="flib"'+(ui.showLibs?' checked':'')+'> Mostrar bibliotecas</label><span id="gcount"></span></div>';
+  h+='<div id="grid"></div>';
+  h+='<p class="foot">Versão usada nos filtros e no link de verificação: '+esc(cur.v.id)+(cur.auto?' (automática)':'')+'. Builds, dependências e datas vêm do Modrinth (verificado em '+esc(DATA_DATE||'—')+'); RAM e CPU são estimativas.</p>';
+  return h;
+}
+function mrUrl(m){
+  if(m.slug)return 'https://modrinth.com/mod/'+encodeURIComponent(m.slug)+'/versions?g='+encodeURIComponent(cur.v.vq)+'&l=fabric';
+  return 'https://modrinth.com/mods?q='+encodeURIComponent(m.name)+'&g=categories%3Afabric&v='+encodeURIComponent(cur.v.vq);
+}
+function dlTxt(n){return n>=1e6?fmt(n/1e6,1)+' mi':n>=1e3?Math.round(n/1e3)+' mil':String(n)}
+function renderGrid(anim){
   var g=$('#grid');if(!g)return;
-  var q=norm(ui.q),t=cur.t;
+  var q=norm(ui.q),t=cur.t,sp=ui.sub!=='all'?ui.sub.split('|'):null;
   var list=MODS.filter(function(m){
+    if(m.lib&&!ui.showLibs&&S.pack.indexOf(m.id)<0)return false;
     if(ui.cat!=='all'&&m.cat!==ui.cat)return false;
+    if(sp&&(m.cat!==sp[0]||m.sub!==sp[1]))return false;
     if(ui.onlyAvail&&m.ver.indexOf(t)<0)return false;
     if(ui.hideBan&&S.ban.indexOf(m.id)>=0&&S.pack.indexOf(m.id)<0)return false;
-    if(q&&norm(m.name+' '+m.desc+' '+m.cat).indexOf(q)<0)return false;
+    if(q&&norm(m.name+' '+m.desc+' '+m.cat+' '+m.sub).indexOf(q)<0)return false;
     return true;
   });
   list.sort(function(a,b){
     if(ui.sort==='name')return a.name.localeCompare(b.name);
     if(ui.sort==='ram')return a.ram-b.ram;
-    var fa=modFit(a),fb=modFit(b);return (fb==null?-1:fb)-(fa==null?-1:fa)||a.name.localeCompare(b.name);
+    if(ui.sort==='pop')return b.dl-a.dl;
+    if(ui.sort==='new'){var ua=(a.tu&&a.tu[t])||0,ub=(b.tu&&b.tu[t])||0;return ub-ua||b.dl-a.dl}
+    if(ui.sort==='cat')return CATS.indexOf(a.cat)-CATS.indexOf(b.cat)||a.sub.localeCompare(b.sub)||b.dl-a.dl;
+    var fa=modFit(a),fb=modFit(b);return (fb==null?-1:fb)-(fa==null?-1:fa)||b.dl-a.dl;
   });
   $('#gcount').textContent=list.length+' de '+MODS.length+' mods';
   if(!list.length){g.innerHTML='<div class="empty">Nenhum mod com esses filtros. Desmarque “só mods com build na versão atual” ou limpe a busca.</div>';return}
-  g.innerHTML=list.map(card).join('');
+  var html='',last='';
+  list.forEach(function(m){
+    if(ui.sort==='cat'){var k=m.cat+' · '+m.sub;if(k!==last){html+='<div class="ghead">'+esc(m.cat)+' <span>'+esc(m.sub||'Geral')+'</span></div>';last=k}}
+    html+=card(m);
+  });
+  g.innerHTML=html;
+  if(window.FX&&FX.gridIn)FX.gridIn(g,anim);
 }
 function card(m){
-  var inP=S.pack.indexOf(m.id)>=0,ban=S.ban.indexOf(m.id)>=0,f=modFit(m);
+  var inP=S.pack.indexOf(m.id)>=0,ban=S.ban.indexOf(m.id)>=0,f=modFit(m),t=cur.t;
   var tags='';
   if(m.live)tags+='<span class="tag" style="border-color:var(--copper);color:var(--copper)">dados ao vivo</span>';
   if(m.lib)tags+='<span class="tag">biblioteca</span>';
-  if(m.core)tags+='<span class="tag">fundamento</span>';
+  if(m.core)tags+='<span class="tag good">fundamento</span>';
+  if(m.dl>=5e6)tags+='<span class="tag good" title="'+dlTxt(m.dl)+' de downloads">popular</span>';
   if(m.heavy)tags+='<span class="tag warn">pesado</span>';
-  if(m.gpu)tags+='<span class="tag warn">usa GPU</span>';
+  if(m.gpu||GPUW[m.id]>=2)tags+='<span class="tag warn">usa GPU</span>';
   if(m.fragile)tags+='<span class="tag warn">experimental</span>';
   if(m.inv>=3)tags+='<span class="tag">overhaul</span>';
   if(m.grp)tags+='<span class="tag">'+esc(GR[m.grp])+'</span>';
-  var dps=depsOf(m,cur.t).filter(function(d){return d!=='fabric-api'});
+  var sm=staleM(m,t);if(m.ver.indexOf(t)>=0&&sm>30)tags+='<span class="tag warn" title="Última build para '+esc(cur.v.id)+' há '+sm+' meses">parado há '+Math.floor(sm/12)+' anos</span>';
+  var dps=depsOf(m,t).filter(function(d){return d!=='fabric-api'});
   if(dps.length)tags+='<span class="tag">exige: '+esc(dps.slice(0,4).map(function(d){return BY[d]?BY[d].name:d}).join(', '))+(dps.length>4?' +'+(dps.length-4):'')+'</span>';
   var fitH=f==null?'<div class="fit">Base<div class="meter"><i style="width:0"></i></div></div>':'<div class="fit"><b>'+Math.round(f*100)+'%</b> encaixe<div class="meter"><i style="width:'+Math.round(f*100)+'%"></i></div></div>';
-  var cost='RAM '+(m.ram>0?'+':'')+m.ram+' MB<br>CPU '+(m.cpu>0?'+':'')+fmt(m.cpu,1);
+  var cost='RAM '+(m.ram>0?'+':'')+m.ram+' MB<br>CPU '+(m.cpu>0?'+':'')+fmt(m.cpu,1)+(m.dl?'<br><span class="dl">'+dlTxt(m.dl)+' downloads</span>':'');
   var vts='<div class="vts">'+VERS.map(function(v){return '<i class="vt'+(m.ver.indexOf(v.t)>=0?' on':'')+(cur.t===v.t?' cur':'')+'">'+v.id+'</i>'}).join('')+'</div>';
-  return '<div class="mrow'+(inP?' in':'')+(ban&&!inP?' off':'')+'">'
-   +'<div class="c-main"><div class="mname">'+esc(m.name)+'<small>'+esc(m.cat)+'</small></div><div class="mdesc">'+esc(m.desc)+(m.note?' <em>'+esc(m.note)+'</em>':'')+'</div><div class="tags">'+tags+'</div></div>'
-   +fitH+'<div class="cost mono">'+cost+'</div><div>'+vts+'<a class="vlink" href="'+mrUrl(m)+'" target="_blank" rel="noopener">verificar no Modrinth</a></div>'
+  var upd=m.tu&&m.tu[t]?'<span class="upd">build '+esc(cur.v.id)+': '+(2000+Math.floor(m.tu[t]/100))+'-'+String(m.tu[t]%100).padStart(2,'0')+'</span>':'';
+  return '<div class="mrow'+(inP?' in':'')+(ban&&!inP?' off':'')+'" data-mid="'+m.id+'">'
+   +'<div class="c-main"><div class="mname"><img class="ico" alt="" width="28" height="28" src="'+icon(m)+'"><span class="nm">'+esc(m.name)+'</span><small>'+esc(m.cat)+(m.sub?' · '+esc(m.sub):'')+'</small></div><div class="mdesc">'+esc(m.desc)+(m.note?' <em>'+esc(m.note)+'</em>':'')+'</div><div class="tags">'+tags+'</div></div>'
+   +fitH+'<div class="cost mono">'+cost+'</div><div>'+vts+upd+'<a class="vlink" href="'+mrUrl(m)+'" target="_blank" rel="noopener">abrir no Modrinth</a></div>'
    +'<div class="acts">'+(inP?'<button class="btn danger sm" data-act="rm" data-id="'+m.id+'">Remover</button>':'<button class="btn sm" data-act="add" data-id="'+m.id+'">Adicionar</button>')
    +(inP?'':'<button class="btn ghost sm" data-act="ban" data-id="'+m.id+'" title="'+(ban?'Voltar a considerar':'Descartar: não sugerir')+'">'+(ban?'Reativar':'Descartar')+'</button>')+'</div></div>';
+}
+/* ícone em pixel-art gerado do id do mod: um “item” único, simétrico, com a paleta da categoria */
+var ICOC={};
+var PAL={'Otimização':['#7a1f1f','#d83a3a','#ff8a5c'],'Bibliotecas':['#3b3f4d','#6b7388','#aab3c8'],'Interface & QoL':['#1f3f7a','#3d6fd8','#8ab0ff'],'Mapas & Navegação':['#7a5a1f','#d8a53d','#ffd98a'],'Visual & Som':['#4a1f7a','#8a3dd8','#c98aff'],'Mundo & Estruturas':['#1f6a3a','#3dba5f','#8aff9f'],'Aventura & Combate':['#6a1f1f','#c0392b','#ff9b8a'],'Itens & Equipamentos':['#3f5a6a','#6fa2c0','#bfe6ff'],'Tecnologia':['#555','#999','#e4a63c'],'Armazenamento':['#5a3b1f','#a8723d','#e8c08a'],'Magia':['#3a1f6a','#7a3dd8','#e08aff'],'Sobrevivência':['#2f4a1f','#6a9a3d','#c8e88a'],'Comida & Fazenda':['#7a4a1f','#d8803d','#ffd08a'],'Criaturas':['#1f5a6a','#3dacc0','#8affef'],'Construção':['#5a4a3b','#a89272','#eadcc0'],'Ferramentas & Utilidades':['#3b4a5a','#6f8aa8','#c0d8f0']};
+function hash32(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function icon(m){
+  if(ICOC[m.id])return ICOC[m.id];
+  var c=document.createElement('canvas');c.width=c.height=8;var x=c.getContext('2d');
+  var pal=PAL[m.cat]||PAL['Bibliotecas'],h=hash32(m.id),rnd=function(){h=Math.imul(h^(h>>>15),2246822519)>>>0;h=(h^(h>>>13))>>>0;return h/4294967296};
+  x.fillStyle=pal[0];x.fillRect(0,0,8,8);
+  for(var yy=0;yy<8;yy++)for(var xx=0;xx<4;xx++){var v=rnd();var col=v<0.34?null:v<0.7?pal[1]:pal[2];if(col){x.fillStyle=col;x.fillRect(xx,yy,1,1);x.fillRect(7-xx,yy,1,1)}}
+  x.fillStyle='rgba(0,0,0,.35)';x.fillRect(0,7,8,1);x.fillRect(7,0,1,8);
+  x.fillStyle='rgba(255,255,255,.28)';x.fillRect(0,0,8,1);x.fillRect(0,0,1,8);
+  return ICOC[m.id]=c.toDataURL();
 }
 function radar(c){
   var keys=CK,lab=CK.map(function(k){return CS[k]}),NK=keys.length;
@@ -848,12 +1020,21 @@ function radar(c){
   var s='<svg class="radar" viewBox="-50 0 380 240" role="img" aria-label="Radar dos sete critérios">';
   [0.25,0.5,0.75,1].forEach(function(f){s+='<polygon class="ring" points="'+keys.map(function(k,i){return pt(i,f).join(',')}).join(' ')+'"/>'});
   keys.forEach(function(k,i){var p=pt(i,1);s+='<line class="axis" x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'"/>'});
-  s+='<polygon class="area" points="'+keys.map(function(k,i){return pt(i,c.crit[k]/100).join(',')}).join(' ')+'"/>';
+  s+='<polygon class="area" data-v="'+keys.map(function(k){return Math.round(c.crit[k]*10)/10}).join(',')+'" points="'+keys.map(function(k,i){return pt(i,c.crit[k]/100).join(',')}).join(' ')+'"/>';
   keys.forEach(function(k,i){
     var a=-Math.PI/2+i*2*Math.PI/NK,x=cx+Math.cos(a)*(R+14),y=cy+Math.sin(a)*(R+14)+4,an=Math.cos(a)>0.3?'start':Math.cos(a)<-0.3?'end':'middle';
     s+='<text x="'+x+'" y="'+y+'" text-anchor="'+an+'">'+lab[i]+' '+Math.round(c.crit[k])+'</text>';
   });
   return s+'</svg>';
+}
+function craftHTML(c){
+  var top=S.pack.map(function(i){return BY[i]}).filter(function(m){return !m.lib&&!INFRA[m.cat]}).sort(function(a,b){var fa=modFit(a),fb=modFit(b);return (fb==null?.4:fb)-(fa==null?.4:fa)}).slice(0,9);
+  var h='<section class="block craft-block"><h3>Mesa de forja</h3><p class="sub">Os nove mods que mais encaixam no seu objetivo e o resultado que a Forja calculou.</p><div class="craft"><div class="grid3">';
+  for(var i=0;i<9;i++){var m=top[i];
+    h+=m?'<div class="slot" title="'+esc(m.name)+'"><img alt="'+esc(m.name)+'" width="44" height="44" src="'+icon(m)+'"></div>':'<button type="button" class="slot empty" data-act="tab" data-id="catalog" title="Slot vazio: abrir o catálogo" aria-label="Slot vazio: abrir o catálogo"></button>';
+  }
+  var tr=c.total>=85?'epic':c.total>=72?'rare':c.total>=58?'uncommon':'common';
+  return h+'</div><div class="arrow" aria-hidden="true">➜</div><div class="result '+tr+'"><b data-v="'+Math.round(c.total)+'">'+Math.round(c.total)+'</b><span>'+esc(tierLabel(c.total))+'</span><i class="glint"></i></div></div></section>';
 }
 function barColor(v){return v>=70?'var(--copper)':v>=45?'var(--gold)':'var(--red)'}
 function vPack(){
@@ -863,6 +1044,7 @@ function vPack(){
   }
   var w=critWeights(),names=CN;
   h+='<p class="lead">Nota calculada para '+esc(c.v.id)+(c.auto?' (a versão que melhor encaixa neste pack agora)':'')+'. Cada critério mostra o motivo, não só o número.</p>';
+  h+=craftHTML(c);
   h+='<section class="block"><div class="scoregrid"><div>'+radar(c)+'</div><div>';
   CK.forEach(function(k){
     h+='<div class="crit"><div class="h"><b>'+names[k]+'<em>peso '+Math.round(w[k]*100)+'%</em></b><span style="color:'+barColor(c.crit[k])+'">'+Math.round(c.crit[k])+'</span></div><div class="bar"><i style="width:'+c.crit[k]+'%;background:'+barColor(c.crit[k])+'"></i></div><ul class="notes">'+c.notes[k].map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul></div>';
@@ -988,16 +1170,16 @@ function afterSuggest(){
 }
 function drawVersions(){
   var box=$('#vbox');if(!box||!ui.vres)return;
-  var r=ui.vres,h='<div class="scroll"><table><thead><tr><th>Versão</th><th>Melhor pack possível</th><th>Seu pack nela</th><th>Notas</th></tr></thead><tbody>';
+  var r=ui.vres,h='<div class="vrail" role="img" aria-label="Nota do melhor pack em cada versão do Minecraft"><div class="vline"><i></i></div>'+r.rows.map(function(x){var b=x.v.t===r.best;return '<div class="vnode'+(b?' best':'')+'"><div class="orb" style="--s:'+Math.round(x.r.total)+'"><b>'+Math.round(x.r.total)+'</b></div><span>'+x.v.id+'</span><small>Java '+x.v.java+(b?' · recomendada':'')+'</small></div>'}).join('')+'</div><div class="scroll"><table><thead><tr><th>Versão</th><th>Melhor pack possível</th><th>Seu pack nela</th><th>Notas</th></tr></thead><tbody>';
   r.rows.forEach(function(x){
     var isBest=x.v.t===r.best;
     h+='<tr class="'+(isBest?'best':'')+'"><td><b>'+x.v.id+'</b>'+(isBest?'<div class="tag" style="display:inline-block;margin-left:6px;border-color:var(--xp);color:var(--xp)">recomendada</div>':'')+'<div class="sub" style="margin:0">Java '+x.v.java+'</div></td>'
      +'<td class="mono"><b>'+Math.round(x.r.total)+'</b>/100 com '+x.ids.length+' mods<div class="sub" style="margin:0">ajuste da versão '+adjTxt(vAdj(x.v))+'</div></td>'
-     +'<td class="mono">'+(S.pack.length?x.have+' de '+S.pack.length+' mods com build':'—')+'</td>'
+     +'<td class="mono">'+(S.pack.length?S.pack.filter(function(i){return BY[i].ver.indexOf(x.v.t)>=0}).length+' de '+S.pack.length+' mods com build':'—')+'</td>'
      +'<td style="font-size:.85rem;color:var(--muted)">'+esc(x.v.note)+'</td></tr>';
   });
   h+='</tbody></table></div><div class="row" style="margin-top:12px"><button class="btn" data-act="usever" data-id="'+r.best+'">Fixar '+VT[r.best].id+'</button><button class="btn ghost" data-act="usever" data-id="auto">Deixar automática</button></div><p class="sub" style="margin-top:10px">Disponibilidade por versão vem de conhecimento até meados de 2026 e de buscas pontuais; confirme no Modrinth antes de baixar. Versões ainda mais novas que a 26.2 podem existir.</p>';
-  box.innerHTML=h;
+  box.innerHTML=h;fx('rail');
 }
 function mrLink(m){
   var L=LIVE.mods[m.id];
@@ -1307,11 +1489,11 @@ function arm(el,fn,label){
 }
 function act(a,d,el){
   switch(a){
-    case 'tab':ui.tab=d.id;ui.exportText='';renderTabs();renderView();window.scrollTo({top:0,behavior:'auto'});break;
-    case 'theme':{var cs=document.documentElement.getAttribute('data-theme');var dark=cs?cs==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');break}
+    case 'tab':if(ui.tab===d.id)break;ui.tab=d.id;ui.exportText='';renderTabs();swapView();break;
+    case 'theme':{var cs=document.documentElement.getAttribute('data-theme');var dark=cs?cs==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');fx('recolor');break}
     case 'preset':applyPreset(d.id);break;
-    case 'add':addMod(d.id);commit();break;
-    case 'rm':rmMod(d.id);commit();break;
+    case 'add':fx('fly',el,icon(BY[d.id]),'add');addMod(d.id);commit();break;
+    case 'rm':fx('fly',el,icon(BY[d.id]),'rm');rmMod(d.id);commit();break;
     case 'ban':{var i=S.ban.indexOf(d.id);if(i>=0)S.ban.splice(i,1);else S.ban.push(d.id);commit();break}
     case 'clear':arm(el,function(){S.pack=[];ui.exportText='';commit()},'Limpar tudo?');break;
     case 'copylist':copyText(packList(),'Lista copiada.');break;
@@ -1325,8 +1507,8 @@ function act(a,d,el){
       if(mode==='opts'){
         if(!o.opts)break;
         applyOpts(o.opts);ui.imp={text:'',res:null};ui.vkey='';ui.tab='goal';
-        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView();
-        window.scrollTo({top:0,behavior:'auto'});
+        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView(true);
+        scrollTop();
         toast('Opções do Objetivo importadas. O pack atual foi mantido.');
         break}
       arm(el,function(){
@@ -1336,8 +1518,8 @@ function act(a,d,el){
         else{if(o.opts)applyOpts(o.opts);S.pack=ids;if(o.ban)S.ban=o.ban;if(r.kind==='json')S.done=o.done||[]}
         S.ban=S.ban.filter(function(i){return S.pack.indexOf(i)<0});
         ui.imp={text:'',res:null};ui.exportText='';ui.vkey='';ui.tab='pack';
-        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView();
-        window.scrollTo({top:0,behavior:'auto'});
+        $('#packName').value=S.name;persist();recompute();renderTop();renderTabs();renderView(true);
+        scrollTop();
         toast((mode==='add'?'Somados ao pack: ':'Pack importado: ')+ids.length+' mods. Total: '+S.pack.length+'.');
       },(mode==='replace'&&S.pack.length)?'Substituir pack atual?':null);
       break}
@@ -1357,7 +1539,7 @@ function act(a,d,el){
       var t=recT(),start=d.mode==='complete'?S.pack:[];
       var run=function(){var ids=autoBuild(t,start);S.pack=ids;commit();
         toast('Pack montado com '+ids.length+' mods ('+VT[t].id+').');
-        if(ui.tab!=='pack'){ui.tab='pack';renderTabs();renderView()}
+        if(ui.tab!=='pack'){ui.tab='pack';renderTabs();renderView(true)}
         window.scrollTo({top:0,behavior:'auto'})};
       if(d.mode==='replace'&&S.pack.length)arm(el,run,'Substituir o pack atual?');else run();
       break}
@@ -1373,7 +1555,8 @@ document.addEventListener('input',function(e){
     var k=el.dataset.k,v=+el.value;
     if(DK[k])S.w[k]=v;else S[k]=v;
     S.preset='';
-    var o=$('#o_'+k);if(o)o.textContent=v+(k==='size'?' mods':'');
+    var o=$('#o_'+k);if(o){o.textContent=v+(k==='size'?' mods':'');if(!o._p||Date.now()-o._p>140){o._p=Date.now();fx('pop',o)}}
+    el.style.setProperty('--p',((v-el.min)/(el.max-el.min)*100)+'%');
     var pr=document.querySelectorAll('.pre.on');for(var i=0;i<pr.length;i++)pr[i].classList.remove('on');
     persist();recompute();renderTop();renderInsight();
   }
@@ -1384,10 +1567,13 @@ document.addEventListener('change',function(e){
   if(el.dataset&&el.dataset.ck){
     var cid=el.dataset.ck,ci=S.done.indexOf(cid);
     if(el.checked&&ci<0)S.done.push(cid);else if(!el.checked&&ci>=0)S.done.splice(ci,1);
+    var allDone=S.pack.length&&S.pack.every(function(i){return S.done.indexOf(i)>=0});fx('check',el,el.checked,allDone&&el.checked);
     persist();renderTabs();var y2=window.scrollY||0;renderView();window.scrollTo(0,y2);return}
   if(el.id==='ckpend'){ui.ckPend=el.checked;var y3=window.scrollY||0;renderView();window.scrollTo(0,y3);return}
   if(el.id==='uselive'){S.useLive=el.checked;persist();applyLive();ui.vkey='';recompute();renderTop();renderTabs();if(ui.tab==='suggest')renderView();return}
-  if(el.id==='fcat'){ui.cat=el.value;renderGrid();return}
+  if(el.id==='fcat'){ui.cat=el.value;ui.sub='all';var fs=$('#fsub');if(fs)fs.innerHTML=subOptions();renderGrid(true);return}
+  if(el.id==='fsub'){ui.sub=el.value;renderGrid(true);return}
+  if(el.id==='flib'){ui.showLibs=el.checked;var fs2=$('#fsub');if(fs2)fs2.innerHTML=subOptions();renderGrid(true);return}
   if(el.id==='fsort'){ui.sort=el.value;renderGrid();return}
   if(el.id==='fav'){ui.onlyAvail=el.checked;renderGrid();return}
   if(el.id==='fban'){ui.hideBan=el.checked;renderGrid();return}
@@ -1397,7 +1583,8 @@ document.addEventListener('change',function(e){
 
 /* ============ INICIAR ============ */
 $('#packName').value=S.name||'Meu modpack';
-applyLive();recompute();renderTop();renderTabs();renderView();
+fx('init');
+applyLive();recompute();renderTop();renderTabs();renderView(true);fx('measure');
 (function(){try{if(window.claude&&typeof window.claude.use==='function'){window.claude.use('downloads').then(function(d){DL=d}).catch(function(){})}}catch(e){}})();
 })();
 </script>
