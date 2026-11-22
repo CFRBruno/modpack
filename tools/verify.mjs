@@ -54,7 +54,7 @@ const EXTRA={universalgraves:{grp:'graves'},waystones:{grp:'waystone'},lambdynli
 const QOVR={create:'Create Fabric',c2me:'Concurrent Chunk Management Engine',skinlayers:'3D Skin Layers',rso:'Reese\'s Sodium Options',farmersdelight:'Farmer\'s Delight Refabricated',spellengine:'Spell Engine',jade:'Jade',wthit:'WTHIT',lithium:'Lithium',moonlight:'Moonlight'};
 
 /* ---- monta a lista base ---- */
-const orig=JSON.parse(fs.readFileSync('/tmp/existing.json','utf8'));
+const orig=JSON.parse(fs.readFileSync(path.join(ROOT,'tools','src','existing-base.json'),'utf8'));
 const recs=[];
 for(const r of orig){
   const [id,name,cat,desc,aff,ram,cpu,inv,ver,o]=r,ov=existingOv[id];

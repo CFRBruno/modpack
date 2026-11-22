@@ -305,6 +305,9 @@ html.fx .mrow:hover .ico{animation:wig .5s ease}
   .lvl{font-size:1.6rem;min-height:1.6rem}
   .xpbar{margin:3px auto}
   .brand svg{width:30px;height:30px}
+  .brand small{display:none}
+  #packName{font-size:1rem}
+  .verdict{font-size:.78rem}
   .grid2,.scoregrid{grid-template-columns:1fr}
   .hero{grid-template-columns:1fr;min-height:0;padding-top:14px}
   .hero-art{height:230px;order:-1}
@@ -1391,13 +1394,13 @@ async function findProject(m,signal){
   return best?best.h:null;
 }
 async function liveOne(m,signal){
-  var h=await findProject(m,signal);
+  var h=m.slug?{project_id:m.slug,slug:m.slug}:await findProject(m,signal);
   if(!h)return {found:false};
   var gv=[];VERS.forEach(function(v){gv=gv.concat(GVMAP[v.t])});
   var url=API+'/project/'+encodeURIComponent(h.project_id)+'/version?loaders='+encodeURIComponent('["fabric"]')+'&game_versions='+encodeURIComponent(JSON.stringify(gv))+'&include_changelog=false';
   var vs=await getJSON(url,signal),tiers={};
   VERS.forEach(function(v){
-    var c=vs.filter(function(x){return (x.game_versions||[]).some(function(g){return GVMAP[v.t].indexOf(g)>=0})});
+    var c=vs.filter(function(x){return x.version_type!=='alpha'&&(x.game_versions||[]).some(function(g){return GVMAP[v.t].indexOf(g)>=0})});
     if(!c.length){tiers[v.t]=null;return}
     c.sort(function(a,b){return String(b.date_published).localeCompare(String(a.date_published))});
     var rel=c.filter(function(x){return x.version_type==='release'}),pk=rel[0]||c[0];
