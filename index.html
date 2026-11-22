@@ -54,7 +54,7 @@ p{margin:.4em 0}
 .brand small{display:block;color:var(--muted);font-size:.78rem}
 #packName{width:100%;min-width:0;background:transparent;border:0;border-bottom:2px dashed var(--line);font:700 1.15rem var(--head);padding:2px 0;color:var(--text)}
 .xp{text-align:center}
-.lvl{font:700 2rem/1 var(--head);color:var(--xp);text-shadow:2px 2px 0 var(--shadow);letter-spacing:.02em;min-height:2rem}
+.lvl{font:700 2.1rem/1 var(--body);color:var(--xp);text-shadow:2px 2px 0 var(--shadow);letter-spacing:.02em;min-height:2rem;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .lvl small{font:600 .85rem var(--body);color:var(--muted);text-shadow:none;margin-left:6px}
 .xpbar{position:relative;height:14px;margin:6px auto 4px;background:var(--seg);border:2px solid var(--bevel);max-width:440px;overflow:hidden}
 .xpbar .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--xp),var(--xp2));transition:width .35s ease}
@@ -95,7 +95,7 @@ textarea{min-height:76px;resize:vertical}
 .slrow:last-child{border-bottom:0}
 .slrow label b{display:block;font-size:.95rem}
 .slrow label span{display:block;color:var(--muted);font-size:.78rem;line-height:1.3}
-.slrow output{font:700 1.05rem var(--head);text-align:right;color:var(--lapis)}
+.slrow output{font:700 1.05rem var(--body);text-align:right;color:var(--lapis);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 input[type=range]{width:100%;accent-color:var(--lapis);height:28px}
 .insight{border-left:4px solid var(--copper);background:var(--panel2);padding:10px 14px;margin-top:14px;font-size:.92rem}
 .insight p{margin:.25em 0}
@@ -116,7 +116,7 @@ input[type=range]{width:100%;accent-color:var(--lapis);height:28px}
 .tag.warn{border-color:var(--gold);color:var(--gold)}
 .tag.err{border-color:var(--red);color:var(--red)}
 .fit{font-size:.78rem;color:var(--muted)}
-.fit b{font:700 1.05rem var(--head);color:var(--text)}
+.fit b{font:700 1.05rem var(--body);color:var(--text);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .meter{height:6px;background:var(--seg);margin-top:3px}
 .meter i{display:block;height:100%;background:var(--copper)}
 .cost{font-size:.8rem;color:var(--muted);line-height:1.5}
@@ -138,7 +138,7 @@ input[type=range]{width:100%;accent-color:var(--lapis);height:28px}
 .crit:last-child{border-bottom:0}
 .crit .h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .crit .h b{font-size:.98rem}
-.crit .h span{font:700 1.1rem var(--head)}
+.crit .h span{font:700 1.1rem var(--body);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .crit .h em{font-style:normal;color:var(--muted);font-size:.78rem;margin-left:6px}
 .bar{height:8px;background:var(--seg);margin:5px 0}
 .bar i{display:block;height:100%}
@@ -168,7 +168,7 @@ tr.best td:first-child{box-shadow:inset 4px 0 0 var(--xp)}
 .scroll{overflow-x:auto}
 .sugrow{display:grid;grid-template-columns:1fr 90px auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px dotted var(--line)}
 .sugrow .why{color:var(--muted);font-size:.82rem}
-.gain{font:700 1.1rem var(--head);color:var(--copper);text-align:right}
+.gain{font:700 1.1rem var(--body);color:var(--copper);text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .gain.neg{color:var(--red)}
 .ai-out{background:var(--panel2);border:1px solid var(--line);padding:14px 18px;margin-top:12px;min-height:60px}
 .ai-out h4{margin:14px 0 4px;font-family:var(--head);font-size:1.1rem;color:var(--lapis)}
@@ -192,7 +192,7 @@ summary{cursor:pointer;font-weight:600}
 
 .tag.good{border-color:var(--copper);color:var(--copper)}
 .issue.step{align-items:center}
-.stepn{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;background:var(--lapis);color:#fff;font:700 .95rem var(--head);border-radius:3px;box-shadow:0 2px 0 #0003}
+.stepn{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;background:var(--lapis);color:#fff;font:700 .95rem var(--body);border-radius:3px;box-shadow:0 2px 0 #0003;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .gaprow{padding:10px 0 4px;border-bottom:1px solid var(--line)}
 .gaprow:last-child{border-bottom:0}
 .gaph{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
@@ -232,7 +232,7 @@ html.fx .tab[aria-selected="true"]{border-bottom-color:transparent}
 .tab:hover{color:var(--text)}
 html.fx #toast{transition:none;opacity:0;transform:none;left:50%}
 .xp{position:relative}
-.xpd{position:absolute;left:calc(50% + 52px);top:2px;font:700 1.05rem var(--head);pointer-events:none;text-shadow:2px 2px 0 var(--shadow)}
+.xpd{position:absolute;left:calc(50% + 52px);top:2px;font:700 1.05rem var(--body);pointer-events:none;text-shadow:2px 2px 0 var(--shadow);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .xpd.up{color:var(--xp)}
 .xpd.down{color:var(--red)}
 .fxfly{position:fixed;left:0;top:0;width:34px;height:34px;image-rendering:pixelated;z-index:90;pointer-events:none;border-radius:3px;box-shadow:0 3px 0 #0005}
@@ -255,7 +255,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:20px;background:var(--gold
 .hero-title .ch{display:inline-block}
 .hero-sub{font-size:1.08rem;color:var(--muted);max-width:52ch;margin:0 0 22px}
 .hero-stats{display:flex;flex-wrap:wrap;gap:14px 30px}
-.hero-stats b{display:block;font:700 1.75rem var(--head);color:var(--lapis)}
+.hero-stats b{display:block;font:700 1.9rem/1.1 var(--body);color:var(--lapis);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .hero-stats span{font-size:.78rem;color:var(--muted)}
 .hero-art{position:relative;height:300px;display:flex;align-items:flex-end;justify-content:center}
 .hero-art .anvil{width:min(330px,86%);filter:drop-shadow(0 10px 0 var(--shadow))}
@@ -275,7 +275,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:20px;background:var(--gold
 .slot.empty:hover{background:#9a9a9a}
 .craft .arrow{font-size:2.6rem;color:var(--muted)}
 .result{position:relative;width:150px;padding:14px 8px 12px;text-align:center;background:#8b8b8b;border:3px solid;border-color:#373737 #fff #fff #373737;overflow:hidden;box-shadow:0 4px 0 var(--shadow)}
-.result b{display:block;font:700 3.2rem/1 var(--head);color:#fff;text-shadow:3px 3px 0 #3f3f3f}
+.result b{display:block;font:700 3.2rem/1 var(--body);color:#fff;text-shadow:3px 3px 0 #3f3f3f;font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .result span{display:block;margin-top:6px;font-size:.72rem;color:#1b1b1b;line-height:1.25}
 .result .glint{position:absolute;inset:0;background:linear-gradient(115deg,transparent 38%,#ffffff99 50%,transparent 62%);background-size:260% 100%;animation:glint 3.6s linear infinite;pointer-events:none}
 @keyframes glint{from{background-position:160% 0}to{background-position:-110% 0}}
@@ -288,7 +288,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:20px;background:var(--gold
 .vrail .vline i{display:block;height:100%;background:linear-gradient(90deg,var(--xp),var(--xp2));transform-origin:0 50%}
 .vnode{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;min-width:0}
 .vnode .orb{display:grid;place-items:center;width:max(38px,calc(38px + (var(--s) - 60) * .5px));height:max(38px,calc(38px + (var(--s) - 60) * .5px));margin-top:-2px;background:var(--panel);border:3px solid var(--line);border-radius:4px;box-shadow:0 3px 0 var(--bevel)}
-.vnode .orb b{font:700 1rem var(--head)}
+.vnode .orb b{font:700 1rem var(--body);font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero" 0}
 .vnode span{font-weight:700;font-size:.9rem}
 .vnode small{color:var(--muted);font-size:.72rem}
 .vnode.best .orb{border-color:var(--xp);animation:pulse 2.2s ease-in-out infinite}
@@ -1194,7 +1194,7 @@ function vCheck(){
   if(!n)return h+'<div class="empty" style="margin-top:14px"><p><b>Nenhum mod no pack.</b></p><p>Monte o pack no Catálogo ou importe uma lista, e volte aqui para marcar cada mod conforme for adicionando ao launcher.</p><div class="row" style="justify-content:center;margin-top:10px"><button class="btn" data-act="tab" data-id="catalog">Abrir catálogo</button><button class="btn ghost" data-act="tab" data-id="files">Importar lista</button></div></div>';
   var dn=S.done.filter(function(i){return S.pack.indexOf(i)>=0}).length,pct=Math.round(dn/n*100);
   h+='<p class="lead">Marque cada mod depois de colocá-lo no launcher. O progresso fica salvo e acompanha o pack: mods novos entram como pendentes e os removidos saem da lista.</p>';
-  h+='<section class="block"><div class="row" style="justify-content:space-between"><b style="font:700 1.4rem var(--head)">'+dn+' de '+n+' adicionados</b><span class="sub" style="margin:0">'+pct+'% · Minecraft '+esc(cur.v.id)+' · Fabric</span></div>'
+  h+='<section class="block"><div class="row" style="justify-content:space-between"><b style="font:700 1.4rem var(--body);font-variant-numeric:tabular-nums">'+dn+' de '+n+' adicionados</b><span class="sub" style="margin:0">'+pct+'% · Minecraft '+esc(cur.v.id)+' · Fabric</span></div>'
    +'<div class="xpbar" style="max-width:none;margin:10px 0"><div class="fill" style="width:'+pct+'%"></div><div class="segs"></div></div>';
   if(dn===n)h+='<div class="issue info"><div class="t"><b>Tudo adicionado.</b> Abra o jogo e confira se carrega sem erros. O spark ajuda a medir RAM e TPS.</div></div>';
   h+='<div class="row"><label style="display:flex;gap:6px;align-items:center;font-size:.92rem"><input type="checkbox" id="ckpend"'+(ui.ckPend?' checked':'')+'> Mostrar só os pendentes</label><span style="flex:1"></span><button class="btn danger sm" data-act="ckclear">Zerar marcações</button></div></section>';
